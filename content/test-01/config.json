@@ -1,0 +1,28 @@
+{
+  "packageCode": "TEST-01",
+  "audioFile": "listening.mp3",
+  "_catatanDurasi": "Durasi mengikuti format TOEFL ITP. Listening dipatok 35 menit karena audio berdurasi 33,2 menit ditambah margin instruksi. Nilai di sini hanya dipakai saat seeding; setelah itu admin yang mengatur lewat dashboard (SRS FR-010: durasi tidak boleh di-hardcode di logika aplikasi).",
+  "sections": [
+    {
+      "type": "LISTENING",
+      "position": 1,
+      "durationSeconds": 2100,
+      "instructions": "Pada bagian ini Anda akan menguji kemampuan memahami percakapan dan pembicaraan dalam bahasa Inggris. Jawablah semua pertanyaan berdasarkan apa yang dinyatakan atau tersirat oleh pembicara yang Anda dengar.\n\nPart A (soal 1-30): percakapan pendek antara dua orang, diikuti satu pertanyaan.\nPart B (soal 31-50): percakapan atau ceramah yang lebih panjang, diikuti beberapa pertanyaan.\n\nPENTING: audio hanya diputar satu kali dan tidak dapat diulang, dijeda, atau dimundurkan. Pastikan perangkat audio Anda berfungsi sebelum menekan tombol mulai.",
+      "strictAudio": true
+    },
+    {
+      "type": "STRUCTURE",
+      "position": 2,
+      "durationSeconds": 1500,
+      "instructions": "Bagian ini mengukur kemampuan Anda mengenali bahasa Inggris tulis yang baku.\n\nPart A (soal 1-15): pilih satu kata atau frasa yang paling tepat melengkapi kalimat.\nPart B (soal 16-40): setiap kalimat memuat empat bagian bertanda. Pilih satu bagian yang harus diubah agar kalimat menjadi benar.\n\nAnda bebas berpindah antar soal di dalam bagian ini selama waktu masih tersedia.",
+      "strictAudio": false
+    },
+    {
+      "type": "READING",
+      "position": 3,
+      "durationSeconds": 3300,
+      "instructions": "Bacalah setiap bacaan lalu jawab pertanyaan yang menyertainya. Pilih jawaban terbaik dari A, B, C, atau D berdasarkan isi bacaan.\n\nTerdapat 5 bacaan dengan total 50 soal. Bacaan tetap tampil di layar selama Anda mengerjakan soal terkait.\n\nAnda bebas berpindah antar soal di dalam bagian ini selama waktu masih tersedia.",
+      "strictAudio": false
+    }
+  ]
+}

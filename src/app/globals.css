@@ -1,0 +1,166 @@
+/* Bootstrap dimuat lewat <link> di RootLayout (src/app/layout.tsx) —
+   Turbopack tidak mendukung @import root-relative ("/...") di CSS.
+   Font disediakan next/font sebagai --font-body / --font-heading. */
+
+:root {
+  --tp-blue-dark: #0f172a;
+  --tp-blue: #2563eb;
+  --tp-blue-light: #eff6ff;
+  --tp-orange: #ff6b00;
+  --tp-bg: #f1f5f9;
+  --tp-text: #334155;
+  --tp-text-muted: #64748b;
+  --tp-shadow: 0 5px 20px rgba(15, 23, 42, 0.08);
+}
+
+html,
+body {
+  height: 100%;
+}
+
+/* `html body` (bukan `body` saja) supaya specificity-nya di atas aturan
+   `body` bawaan Bootstrap. Dengan selector setara, pemenangnya bergantung
+   urutan pemuatan CSS — dan Bootstrap dimuat lewat <link> yang bisa masuk
+   setelah file ini, sehingga font kustom kita kalah tanpa ini. */
+html body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--tp-bg);
+  color: var(--tp-text);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  color: var(--tp-blue-dark);
+}
+
+.tp-brand {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* Baris kecil ber-spasi lebar di atas judul — nama lembaga. */
+.tp-eyebrow {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tp-blue);
+}
+
+.tp-btn-primary {
+  background: linear-gradient(45deg, var(--tp-blue), #3b82f6);
+  border: none;
+  color: #fff;
+  font-weight: 600;
+}
+
+.tp-btn-primary:hover {
+  color: #fff;
+  filter: brightness(1.05);
+  box-shadow: 0 0 15px rgba(37, 99, 235, 0.35);
+}
+
+.tp-card {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: var(--tp-shadow);
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.tp-disclaimer {
+  font-size: 0.85rem;
+  color: var(--tp-text-muted);
+  background: var(--tp-blue-light);
+  border: 1px solid rgba(37, 99, 235, 0.15);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+}
+
+/* Area soal aktif: cegah seleksi teks & drag sebagai penghambat, bukan DRM
+   (FR-017/FR-020 — browser tidak bisa mencegah copy sepenuhnya). */
+.tp-test-content {
+  user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+}
+
+.tp-test-content img,
+.tp-test-content * {
+  -webkit-user-drag: none;
+}
+
+.tp-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
+  gap: 0.4rem;
+}
+
+.tp-nav-item {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  background: #fff;
+  color: var(--tp-text);
+  cursor: pointer;
+}
+
+.tp-nav-item.is-current {
+  outline: 2px solid var(--tp-blue);
+  outline-offset: 1px;
+}
+
+.tp-nav-item.is-answered {
+  background: var(--tp-blue-light);
+  border-color: var(--tp-blue);
+  color: var(--tp-blue);
+}
+
+.tp-nav-item.is-flagged::after {
+  content: "";
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--tp-orange);
+  border-radius: 50%;
+  transform: translate(0.7rem, -0.7rem);
+}
+
+.tp-choice {
+  display: block;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 10px;
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+}
+
+.tp-choice:hover {
+  border-color: var(--tp-blue);
+}
+
+.tp-choice.is-selected {
+  border-color: var(--tp-blue);
+  background: var(--tp-blue-light);
+}
+
+.tp-timer {
+  font-family: var(--font-body), system-ui, sans-serif;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.tp-timer.is-low {
+  color: #dc2626;
+}

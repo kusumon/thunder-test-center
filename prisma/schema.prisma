@@ -1,0 +1,326 @@
+// Prisma schema — TOEFL Prediction Test
+//
+// Mengikuti SRS §10 (Data Model) dengan penyesuaian:
+//   - Nama tabel fisik tetap snake_case (via @@map) sesuai SRS; field di kode
+//     TypeScript camelCase.
+//   - `Section.audioAssetKey` menggantikan `audio_asset_id` pada SRS: audio
+//     tidak disimpan sebagai baris tabel melainkan sebagai object key di
+//     storage (FR-023 — audio di luar direktori publik).
+//   - `Certificate.sequence` memakai autoincrement Postgres supaya penomoran
+//     sertifikat (FR-014) tetap unik walau banyak permintaan bersamaan;
+//     nomor akhir dirangkai dari prefix + tahun + sequence.
+//   - `Question.correctChoiceKey` HANYA boleh dibaca di server. Tidak ada satu
+//     pun endpoint peserta yang mengembalikan kolom ini (FR-021, FR-022).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum SectionType {
+  LISTENING
+  STRUCTURE
+  READING
+}
+
+enum QuestionType {
+  MCQ
+  ERROR_RECOGNITION
+}
+
+enum AttemptStatus {
+  CREATED
+  IN_PROGRESS
+  COMPLETED
+  EXPIRED
+}
+
+enum CertificateStatus {
+  VALID
+  REVOKED
+}
+
+enum CertificateOrderStatus {
+  MENUNGGU_PEMBAYARAN
+  MENUNGGU_KONFIRMASI
+  DISETUJUI
+  DITOLAK
+}
+
+enum AdminRole {
+  ADMIN
+  SUPERADMIN
+}
+
+/// Peserta anonim — tidak ada akun, hanya nama + token di cookie (FR-002).
+model ParticipantSession {
+  id               String    @id @default(uuid()) @db.Uuid
+  displayName      String    @map("display_name") @db.VarChar(120)
+  sessionTokenHash String    @unique @map("session_token_hash")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  lastSeenAt       DateTime  @updatedAt @map("last_seen_at")
+
+  attempts Attempt[]
+
+  @@map("participant_sessions")
+}
+
+model TestPackage {
+  id                   String   @id @default(uuid()) @db.Uuid
+  code                 String   @unique
+  name                 String
+  description          String?
+  isActive             Boolean  @default(true) @map("is_active")
+  /// Null = sertifikat boleh dibuat berapa pun skornya (perilaku MVP, FR-012).
+  certificateMinScore  Int?     @map("certificate_min_score")
+  createdAt            DateTime @default(now()) @map("created_at")
+
+  sections        Section[]
+  conversionRules ScoreConversionRule[]
+  attempts        Attempt[]
+
+  @@map("test_packages")
+}
+
+model Section {
+  id              String      @id @default(uuid()) @db.Uuid
+  testPackageId   String      @map("test_package_id") @db.Uuid
+  type            SectionType
+  title           String
+  position        Int
+  durationSeconds Int         @map("duration_seconds")
+  instructions    String
+  /// Object key audio di storage. Hanya diisi untuk section LISTENING.
+  audioAssetKey   String?     @map("audio_asset_key")
+  /// Mode ketat: audio sekali jalan, tanpa seek/replay (FR-005).
+  strictAudio     Boolean     @default(true) @map("strict_audio")
+  /// Berapa kali audio boleh diputar peserta (FR-005). Dihitung server,
+  /// bukan client, supaya tidak bisa direset dengan refresh halaman.
+  audioMaxPlays   Int         @default(2) @map("audio_max_plays")
+
+  testPackage     TestPackage               @relation(fields: [testPackageId], references: [id], onDelete: Cascade)
+  passages        Passage[]
+  questions       Question[]
+  sectionSessions AttemptSectionSession[]
+
+  @@unique([testPackageId, type])
+  @@index([testPackageId, position])
+  @@map("sections")
+}
+
+model Passage {
+  id        String @id @default(uuid()) @db.Uuid
+  sectionId String @map("section_id") @db.Uuid
+  title     String?
+  body      String
+  position  Int
+
+  section   Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  questions Question[]
+
+  /// Identitas stabil lintas reseed konten — lihat catatan di seed.ts
+  /// tentang kenapa seed TIDAK BOLEH hapus-lalu-buat-ulang baris ini.
+  @@unique([sectionId, position])
+  @@map("passages")
+}
+
+model Question {
+  id        String       @id @default(uuid()) @db.Uuid
+  sectionId String       @map("section_id") @db.Uuid
+  passageId String?      @map("passage_id") @db.Uuid
+  /// Nomor tampil, unik per section (1-50 / 1-40 / 1-50).
+  number       Int
+  questionType QuestionType @map("question_type")
+  stem         String
+  /// RAHASIA SERVER. Jangan pernah masuk payload API peserta (FR-021).
+  correctChoiceKey String  @map("correct_choice_key") @db.Char(1)
+  position         Int
+  isActive         Boolean @default(true) @map("is_active")
+
+  section Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  passage Passage? @relation(fields: [passageId], references: [id], onDelete: SetNull)
+  choices Choice[]
+  answers AttemptAnswer[]
+
+  @@unique([sectionId, number])
+  @@index([sectionId, position])
+  @@map("questions")
+}
+
+model Choice {
+  id         String @id @default(uuid()) @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  choiceKey  String @map("choice_key") @db.Char(1)
+  text       String
+  position   Int
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, choiceKey])
+  @@index([questionId, position])
+  @@map("choices")
+}
+
+/// Tabel konversi raw -> scaled per section (SRS §6.2). Wajib dapat diaudit
+/// dan diubah admin; tidak boleh jadi rumus hardcode di aplikasi.
+model ScoreConversionRule {
+  id            String      @id @default(uuid()) @db.Uuid
+  testPackageId String      @map("test_package_id") @db.Uuid
+  sectionType   SectionType @map("section_type")
+  rawScore      Int         @map("raw_score")
+  scaledScore   Int         @map("scaled_score")
+
+  testPackage TestPackage @relation(fields: [testPackageId], references: [id], onDelete: Cascade)
+
+  @@unique([testPackageId, sectionType, rawScore])
+  @@map("score_conversion_rules")
+}
+
+model Attempt {
+  id                     String        @id @default(uuid()) @db.Uuid
+  publicCode             String        @unique @map("public_code")
+  participantSessionId   String        @map("participant_session_id") @db.Uuid
+  testPackageId          String        @map("test_package_id") @db.Uuid
+  /// Nama disalin saat attempt dibuat supaya hasil lama tidak ikut berubah
+  /// kalau peserta memakai nama berbeda pada attempt berikutnya.
+  participantNameSnapshot String       @map("participant_name_snapshot") @db.VarChar(120)
+  status                 AttemptStatus @default(CREATED)
+  startedAt              DateTime      @default(now()) @map("started_at")
+  completedAt            DateTime?     @map("completed_at")
+
+  listeningRaw    Int? @map("listening_raw")
+  listeningScaled Int? @map("listening_scaled")
+  structureRaw    Int? @map("structure_raw")
+  structureScaled Int? @map("structure_scaled")
+  readingRaw      Int? @map("reading_raw")
+  readingScaled   Int? @map("reading_scaled")
+  overallScore    Int? @map("overall_score")
+
+  participantSession ParticipantSession      @relation(fields: [participantSessionId], references: [id], onDelete: Cascade)
+  testPackage        TestPackage             @relation(fields: [testPackageId], references: [id])
+  sectionSessions    AttemptSectionSession[]
+  answers            AttemptAnswer[]
+  certificate        Certificate?
+  certificateOrder   CertificateOrder?
+
+  @@index([participantSessionId, startedAt])
+  @@index([status, completedAt])
+  @@map("attempts")
+}
+
+/// Jendela waktu per section. `endsAt` dihitung server saat section dimulai
+/// dan jadi satu-satunya sumber kebenaran timer (FR-010).
+model AttemptSectionSession {
+  id          String    @id @default(uuid()) @db.Uuid
+  attemptId   String    @map("attempt_id") @db.Uuid
+  sectionId   String    @map("section_id") @db.Uuid
+  startedAt   DateTime  @default(now()) @map("started_at")
+  endsAt      DateTime  @map("ends_at")
+  submittedAt DateTime? @map("submitted_at")
+  /// Jumlah pemutaran audio yang sudah dipakai. Server-authoritative:
+  /// refresh halaman tidak mengembalikan jatah (FR-005).
+  audioPlayCount Int @default(0) @map("audio_play_count")
+
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, sectionId])
+  @@map("attempt_section_sessions")
+}
+
+model AttemptAnswer {
+  id               String   @id @default(uuid()) @db.Uuid
+  attemptId        String   @map("attempt_id") @db.Uuid
+  questionId       String   @map("question_id") @db.Uuid
+  selectedChoiceKey String  @map("selected_choice_key") @db.Char(1)
+  answeredAt       DateTime @default(now()) @map("answered_at")
+  /// Diisi server saat penilaian; null selama attempt masih berjalan.
+  isCorrect        Boolean? @map("is_correct")
+
+  attempt  Attempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@map("attempt_answers")
+}
+
+model Certificate {
+  id                String            @id @default(uuid()) @db.Uuid
+  /// Nomor lengkap siap tampil, misal TOEFLP-2026-000001.
+  certificateNumber String            @unique @map("certificate_number")
+  /// Urutan mentah dari Postgres; dipakai merangkai certificateNumber.
+  sequence          Int               @unique @default(autoincrement())
+  attemptId         String            @unique @map("attempt_id") @db.Uuid
+  issuedAt          DateTime          @default(now()) @map("issued_at")
+  status            CertificateStatus @default(VALID)
+  verificationToken String            @unique @map("verification_token")
+
+  attempt Attempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@map("certificates")
+}
+
+/// Pesanan sertifikat berbayar. Sertifikat baru DIBUAT setelah admin
+/// menyetujui pembayaran, sehingga keberadaan baris Certificate sudah
+/// berarti "lunas & disetujui" — tidak perlu pengecekan ganda saat unduh.
+model CertificateOrder {
+  id        String                 @id @default(uuid()) @db.Uuid
+  attemptId String                 @unique @map("attempt_id") @db.Uuid
+  /// Token pembawa (bearer) untuk akses lintas perangkat. Peserta yang
+  /// kehilangan cookie tetap bisa membuka pesanannya lewat kode ini —
+  /// penting karena uang sudah terlanjur dibayarkan.
+  claimCode String                 @unique @map("claim_code")
+  /// Nominal transfer TERMASUK kode unik 3 digit terakhir, mis. 75037.
+  /// Kode unik membuat mutasi rekening bisa dicocokkan tanpa menebak.
+  amount    Int
+  /// Nomor WhatsApp peserta, dipakai admin memulihkan akses bila kode klaim
+  /// ikut hilang. Data pribadi — lihat catatan privasi di README.
+  whatsappNumber String?           @map("whatsapp_number")
+  status    CertificateOrderStatus @default(MENUNGGU_PEMBAYARAN)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  /// Saat peserta menekan "Saya sudah transfer".
+  paidClaimedAt DateTime? @map("paid_claimed_at")
+  reviewedAt    DateTime? @map("reviewed_at")
+  reviewedById  String?   @map("reviewed_by_id") @db.Uuid
+  /// Catatan admin, mis. nomor referensi mutasi bank. Wajib saat menolak.
+  reviewNote    String?   @map("review_note")
+
+  attempt    Attempt    @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  reviewedBy AdminUser? @relation(fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("certificate_orders")
+}
+
+/// Pengaturan global aplikasi (harga, rekening, nomor WA admin) yang boleh
+/// diubah lewat dashboard tanpa deploy ulang.
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  role         AdminRole @default(ADMIN)
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  /// Rate limiting login — NFR-SEC-008. Reset ke 0 saat login berhasil;
+  /// mengunci sementara (lockedUntil) setelah 5 kali gagal berturut-turut.
+  failedLoginCount Int       @default(0) @map("failed_login_count")
+  lockedUntil      DateTime? @map("locked_until")
+
+  reviewedOrders CertificateOrder[]
+
+  @@map("admin_users")
+}

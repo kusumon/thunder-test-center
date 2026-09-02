@@ -1,0 +1,1748 @@
+{
+  "package": {
+    "code": "TEST-01",
+    "name": "TOEFL Prediction Test 01",
+    "description": "Paket prediksi TOEFL ITP-style: 50 Listening, 40 Structure, 50 Reading."
+  },
+  "sections": [
+    {
+      "type": "LISTENING",
+      "title": "Listening Comprehension",
+      "position": 1,
+      "questions": [
+        {
+          "number": 1,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "He finished the problem at last.",
+            "B": "He hardly worked on the math.",
+            "C": "It was hard for him to assign the math.",
+            "D": "The problem was very difficult."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 2,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "He didn’t fail by much.",
+            "B": "He completely failed the exam.",
+            "C": "He had a really high grade.",
+            "D": "His grade was low but passing."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 3,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The laundry is getting done.",
+            "B": "They are close to the cleaners.",
+            "C": "The woman should close the machine.",
+            "D": "He is watching someone clear the machine."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 4,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Leaving on Tuesday.",
+            "B": "Cutting their visit short.",
+            "C": "Changing the day of their departure.",
+            "D": "Postponing their visit to a later date."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 5,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The landlord has raised the rent.",
+            "B": "The landlord has received a letter with some bad news.",
+            "C": "The landlord will not increase the rent.",
+            "D": "The landlord will not rent them an apartment."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 6,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "He is always underappreciated.",
+            "B": "She is thankful for what he did.",
+            "C": "He has made no apparent effort.",
+            "D": "She feels little appreciation for his efforts."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 7,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Getting dressed.",
+            "B": "Making salad.",
+            "C": "Shopping for groceries.",
+            "D": "Washing clothes."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 8,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She convinced Jack to go.",
+            "B": "She will not be able to go to the restaurant.",
+            "C": "Jack has convinced her to go to a restaurant.",
+            "D": "Jack is not going."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 9,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Descend the stairs and go in the second door.",
+            "B": "Step around the building and enter through the first door.",
+            "C": "Go through the first door and go down the steps.",
+            "D": "Go down the hall and enter the doorway."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 10,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She can see him very clearly.",
+            "B": "He speaks loudly.",
+            "C": "He’s very soft-spoken.",
+            "D": "She didn’t speak to him."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 11,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She would like the man to repeat himself.",
+            "B": "The last exam was not very hard.",
+            "C": "She agrees with the man about the exam.",
+            "D": "The man has repeated himself several times."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 12,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "It has probably not been arranged.",
+            "B": "It is ready for the conference.",
+            "C": "It needs a set of chairs.",
+            "D": "It needs to be emptied."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 13,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She’ll be able to stay up until the last moment.",
+            "B": "She’s been running for some time.",
+            "C": "She’s not sure when the last exam is.",
+            "D": "She’s really exhausted."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 14,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "He fascinated the guests.",
+            "B": "The speaker’s ideas intrigued him.",
+            "C": "Giving speeches is fascinating.",
+            "D": "He was a guest of the speaker."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 15,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "It is quite humid this week.",
+            "B": "The humidity will last through the week.",
+            "C": "It is drier now.",
+            "D": "It was better just last week."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 16,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She was extremely understanding.",
+            "B": "She couldn’t understand the explanation.",
+            "C": "She did not understand the problem.",
+            "D": "She missed class due to illness."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 17,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She didn’t see all of the show.",
+            "B": "The show was unbelievable.",
+            "C": "She doesn’t believe that the show really happened.",
+            "D": "The skydivers were pulled off their feet."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 18,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "They were unable to pay the bill.",
+            "B": "The prices were surprisingly low.",
+            "C": "The restaurant was too expensive for them to try.",
+            "D": "They almost didn’t have enough to pay for the meal."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 19,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "He has to take microbiology.",
+            "B": "He wishes he could take microbiology this semester.",
+            "C": "He is not enrolling in microbiology this semester.",
+            "D": "He had hoped to take microbiology this semester."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 20,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "That she would take the course.",
+            "B": "That the first lecture would not be tomorrow.",
+            "C": "That he would not be in the course.",
+            "D": "That she would not register."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 21,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Construction workers.",
+            "B": "Architects.",
+            "C": "Insurance agents.",
+            "D": "Artists."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 22,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The runner did not fail.",
+            "B": "The team won.",
+            "C": "The loss was the runner’s fault.",
+            "D": "The team won’t ever win a game."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 23,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Starting on their exam preparation.",
+            "B": "Leaving for the exam.",
+            "C": "Going home to study.",
+            "D": "Going to her job."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 24,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "She’s not a very good manager.",
+            "B": "He’ll be able to work reasonably well with her.",
+            "C": "He’s unhappy that there is a class project.",
+            "D": "He’s happy that she’s not part of the group."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 25,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "He was not surprised by the change.",
+            "B": "He didn’t expect the change.",
+            "C": "The requirements have not changed.",
+            "D": "He expects to change his major."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 26,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The bridge is too hard to cross.",
+            "B": "They must pay rent for the bridge.",
+            "C": "They must cross a bridge to get to the house.",
+            "D": "They can decide later."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 27,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The trip was less than perfect.",
+            "B": "There was nothing at all wrong with the trip.",
+            "C": "There wasn’t any way that she could take the trip.",
+            "D": "The trip could have been improved in a number of ways."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 28,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "It received more attention on the exam than it did in the lectures.",
+            "B": "It was a major part of all of the lectures.",
+            "C": "It was not on the exam at all.",
+            "D": "It received more attention in the lectures than it had on the exam."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 29,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The professor made an early announcement about the exam.",
+            "B": "The professor failed to announce the exam.",
+            "C": "The professor announced the exam too soon.",
+            "D": "The professor did not give enough notice for the exam."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 30,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "That he would remember her birthday.",
+            "B": "That he would bring her a gift.",
+            "C": "That he had forgotten her birthday.",
+            "D": "That he would get her something she didn’t like."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 31,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "To write his paper.",
+            "B": "To help him decide on a topic.",
+            "C": "To teach him about history.",
+            "D": "To discuss history with him."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 32,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "At the beginning of the semester.",
+            "B": "Before the start of the semester.",
+            "C": "Near the end of the semester.",
+            "D": "One week after the semester is finished."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 33,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The topic’s too general.",
+            "B": "He isn't interested in technology.",
+            "C": "He doesn't have enough time.",
+            "D": "Technology has nothing to do with American history."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 34,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "A month.",
+            "B": "The semester.",
+            "C": "Seven days.",
+            "D": "A day or two."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 35,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Fire damage to some apartments.",
+            "B": "How to prevent fires.",
+            "C": "An apartment fire and what one can learn from it.",
+            "D": "An early morning news story."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 36,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "One was damaged more severely than the others.",
+            "B": "All the apartments were completely destroyed.",
+            "C": "There was one thousand dollars of damage.",
+            "D": "All twenty apartments suffered some damage."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 37,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "They were killed.",
+            "B": "They were taken to the hospital.",
+            "C": "The damage to the apartments was more serious than the harm to the residents.",
+            "D": "They weren't frightened."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 38,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Call the fire department.",
+            "B": "Rush to the hospital.",
+            "C": "Listen for a smoke alarm.",
+            "D": "Have an alarm and extinguisher in good condition."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 39,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "A professional dancer.",
+            "B": "A student in the dance department.",
+            "C": "The head of the dance department.",
+            "D": "A choreographer."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 40,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Which dance degree to take.",
+            "B": "Whether or not to major in dance.",
+            "C": "Whether to be a professional dancer or choreographer.",
+            "D": "Whether to specialize in dance therapy or dance history."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 41,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Physical therapy.",
+            "B": "Dance history.",
+            "C": "Choreography.",
+            "D": "Dance administration."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 42,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "They are both intended for professional dancers.",
+            "B": "They involve mostly the same courses.",
+            "C": "They do not need to be selected until later.",
+            "D": "They are both four-year programs."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 43,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "A Cajun.",
+            "B": "A tourist.",
+            "C": "An Acadian.",
+            "D": "A tour guide."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 44,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "They went to Acadia in the eighteenth century.",
+            "B": "They came from France in the eighteenth century.",
+            "C": "They maintained characteristics of their old culture.",
+            "D": "They assimilated completely into the new culture."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 45,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Very spicy.",
+            "B": "Full of sugar.",
+            "C": "Salty.",
+            "D": "Full of tobacco."
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 46,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "An Acadian will give a talk.",
+            "B": "The bus ride will continue.",
+            "C": "They will stop in Lafayette.",
+            "D": "They will see the exhibition at Acadian Village."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 47,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The purpose of the FCC.",
+            "B": "The relatively rapid development of radio.",
+            "C": "Interference from competing radio stations.",
+            "D": "The first U.S. radio station."
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 48,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "Introduction to Engineering.",
+            "B": "Popular Radio Programs.",
+            "C": "Ethics in Journalism.",
+            "D": "The History of Communication."
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 49,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "The many radio stations were highly regulated.",
+            "B": "In 1930 there was only one radio station in the United States.",
+            "C": "The existing radio stations were totally uncontrolled.",
+            "D": "The FCC was unable to control the radio stations."
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 50,
+          "questionType": "MCQ",
+          "stem": "Choose the best answer based on the audio.",
+          "choices": {
+            "A": "First Communications Committee.",
+            "B": "First Control Committee.",
+            "C": "Federal Control of Communications.",
+            "D": "Federal Communications Commission."
+          },
+          "correctChoiceKey": "D"
+        }
+      ],
+      "passages": []
+    },
+    {
+      "type": "STRUCTURE",
+      "title": "Structure & Written Expression",
+      "position": 2,
+      "questions": [
+        {
+          "number": 1,
+          "questionType": "MCQ",
+          "stem": "Measles is a highly contagious viral disease ……. by a characteristic skin rash.",
+          "choices": {
+            "A": "accompany",
+            "B": "is accompanied",
+            "C": "accompanied",
+            "D": "it is accompanied"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 2,
+          "questionType": "MCQ",
+          "stem": "Charles Darwin's first scientific book published in 1842 ….. a since substantiated theory on the origin of coral reefs and atolls.",
+          "choices": {
+            "A": "to present",
+            "B": "presented",
+            "C": "presenting",
+            "D": "it presents"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 3,
+          "questionType": "MCQ",
+          "stem": "Phytoplanktons thrive where ……. phosphorus into the upper layers of a body of water.",
+          "choices": {
+            "A": "upwelling currents circulate",
+            "B": "the circulation of upwelling currents",
+            "C": "are upwelling currents",
+            "D": "circulates upwelling currents"
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 4,
+          "questionType": "MCQ",
+          "stem": "The Missouri …….. longest river in the United States flows through seven states from its source in Montana to its confluence with the Mississippi.",
+          "choices": {
+            "A": "River the",
+            "B": "River is the",
+            "C": "River is one of the",
+            "D": "River one of the"
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 5,
+          "questionType": "MCQ",
+          "stem": "……….radioisotope is encountered the first step in its identification is the determination of its half-life.",
+          "choices": {
+            "A": "An unknown",
+            "B": "Afterwards an unknown",
+            "C": "When an unknown",
+            "D": "During an unknown"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 6,
+          "questionType": "MCQ",
+          "stem": "Hail forms within large dense cumulonimbus ……. develop on hot humid summer days.",
+          "choices": {
+            "A": "clouds",
+            "B": "clouds that",
+            "C": "clouds that are",
+            "D": "clouds that they"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 7,
+          "questionType": "MCQ",
+          "stem": "Many bugs possess defensive scent glands and emit disagreeable odors when ……",
+          "choices": {
+            "A": "disturbed",
+            "B": "are disturbed",
+            "C": "they disturbed",
+            "D": "are they disturbed"
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 8,
+          "questionType": "MCQ",
+          "stem": "On every continent except Antarctica …… more than 30,000 species of spiders.",
+          "choices": {
+            "A": "some are",
+            "B": "some of the",
+            "C": "are some of the",
+            "D": "is some"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 9,
+          "questionType": "MCQ",
+          "stem": "Hurricanes move with the large-scale wind currents …… are imbedded.",
+          "choices": {
+            "A": "that they",
+            "B": "which they",
+            "C": "in that they",
+            "D": "in which they"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 10,
+          "questionType": "MCQ",
+          "stem": "By the end of 1609 Galileo had a 20-power telescope that enabled him to see …… planets revolving around Jupiter.",
+          "choices": {
+            "A": "the call",
+            "B": "he called",
+            "C": "to call him",
+            "D": "what he called"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 11,
+          "questionType": "MCQ",
+          "stem": "Coral islands such as the Maldives are the tips of reefs built during periods of warm climate when …… higher.",
+          "choices": {
+            "A": "were sea levels",
+            "B": "sea had levels",
+            "C": "having sea levels",
+            "D": "sea levels were"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 12,
+          "questionType": "MCQ",
+          "stem": "Different hormones …… at the same time on a particular target issue.",
+          "choices": {
+            "A": "usually act",
+            "B": "usually acting",
+            "C": "they usual act",
+            "D": "the usual action"
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 13,
+          "questionType": "MCQ",
+          "stem": "Most radioactive elements occur in igneous and metamorphic …… fossils occur in sedimentary rocks.",
+          "choices": {
+            "A": "rocks nearly all",
+            "B": "rocks but nearly all",
+            "C": "rocks nearly all are",
+            "D": "rocks which nearly all are"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 14,
+          "questionType": "MCQ",
+          "stem": "………the Earth's ice to melt the Earth's oceans would rise by about two hundred feet.",
+          "choices": {
+            "A": "If all",
+            "B": "Were all",
+            "C": "If all were",
+            "D": "All was"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 15,
+          "questionType": "MCQ",
+          "stem": "The tidal forces on the Earth due to …… only 0.46 of those due to the Moon.",
+          "choices": {
+            "A": "the Sun is",
+            "B": "the Sun they are",
+            "C": "the Sun it is",
+            "D": "the Sun are"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 16,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Tropical cyclones alike extratropical cyclones which derive much of their energy from the jet stream originate far from the polar front.",
+          "choices": {
+            "A": "Alike",
+            "B": "Which",
+            "C": "Their",
+            "D": "Far from"
+          },
+          "correctChoiceKey": "A"
+        },
+        {
+          "number": 17,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Present in rocks of all types hematite is particular abundant in the sedimentary rocks known as red beds.",
+          "choices": {
+            "A": "Present",
+            "B": "All types",
+            "C": "Particular",
+            "D": "Known"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 18,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "The surface of the planet Venus is almost completely hid by the thick clouds that shroud it.",
+          "choices": {
+            "A": "Almost",
+            "B": "Hid",
+            "C": "Thick",
+            "D": "Shroud"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 19,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Established in 1789 and operated by the Jesuits Georgetown University in Washington D.C. is the older Roman Catholic institution of higher learning in the United States.",
+          "choices": {
+            "A": "Established",
+            "B": "Older",
+            "C": "Of higher",
+            "D": "In"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 20,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Lake Tahoe located on the eastern edge of the Sierra Nevada range is feed by more than thirty mountain streams.",
+          "choices": {
+            "A": "Located",
+            "B": "Feed",
+            "C": "Eastern edge",
+            "D": "Streams"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 21,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Each number on the Richter scale represent a tenfold increase in the amplitude of waves of ground motion recorded during an earthquake.",
+          "choices": {
+            "A": "Number",
+            "B": "Represent",
+            "C": "Ground motion",
+            "D": "Recorded"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 22,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Robert Heinlein was instrumental in popularizing science fiction with a series of stories that is first published in the Saturday Evening Post.",
+          "choices": {
+            "A": "Instrumental",
+            "B": "Popularizing",
+            "C": "Series",
+            "D": "Is"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 23,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Historical records show that Halley's comet has return about every seventy-six years for the past 2000 years.",
+          "choices": {
+            "A": "Show",
+            "B": "Return",
+            "C": "About",
+            "D": "Past"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 24,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Most of the outer planets has large swarms of satellites surrounding them.",
+          "choices": {
+            "A": "Outer",
+            "B": "Has",
+            "C": "Surrounding",
+            "D": "Them"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 25,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "The brilliantly colored rhinoceros viper has two or three horns above each nostrils.",
+          "choices": {
+            "A": "Brilliantly",
+            "B": "Has",
+            "C": "Horns",
+            "D": "Nostrils"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 26,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "During the last Ice Age which ended about 10,000 years ago there was about three times more ice than is today.",
+          "choices": {
+            "A": "During",
+            "B": "Which",
+            "C": "More",
+            "D": "Is"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 27,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Viruses are extremely tiny parasites that are able to reproduce only within the cells of theirs hosts.",
+          "choices": {
+            "A": "Viruses",
+            "B": "Extremely",
+            "C": "Able",
+            "D": "Theirs"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 28,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "The carbon atoms of the diamond are so strongly bonded that a diamond can only be scratched with other diamond.",
+          "choices": {
+            "A": "Carbon atoms",
+            "B": "So strongly",
+            "C": "Scratched",
+            "D": "Other"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 29,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "In Roots Alex Haley uses fictional details to embellish a factual histories of seven generations of his family.",
+          "choices": {
+            "A": "Fictional",
+            "B": "Embellish",
+            "C": "Histories",
+            "D": "Seven"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 30,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Joseph Heller's novel Catch-22 satirizes both the horrors of war as well as the power of modern bureaucratic institutions.",
+          "choices": {
+            "A": "Satirizes",
+            "B": "Horrors",
+            "C": "As well as",
+            "D": "Bureaucratic"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 31,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "In 1964 GATT established the International Trade Center in order to assist developing countries in the promotion of its exports.",
+          "choices": {
+            "A": "To assist",
+            "B": "Developing",
+            "C": "Promotion",
+            "D": "Its"
+          },
+          "correctChoiceKey": "D"
+        },
+        {
+          "number": 32,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "It is possible to get a sunburn on a cloudy day because eighty percent of the ultraviolet rays from the Sun would penetrate cloud cover.",
+          "choices": {
+            "A": "To get",
+            "B": "Cloudy",
+            "C": "Would",
+            "D": "Cover"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 33,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Jaguarundis are sleek long-tailed creatures colored either an uniform reddish brown or dark grey.",
+          "choices": {
+            "A": "Long-tailed",
+            "B": "Colored",
+            "C": "An",
+            "D": "Or"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 34,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Elizabeth Cady Stanton organized the first U.S. women's rights convention in 1848 and was instrumentally in the struggle to win voting and property rights for women.",
+          "choices": {
+            "A": "Women's",
+            "B": "Rights",
+            "C": "Instrumentally",
+            "D": "Voting and property"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 35,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "The incubation period of tetanus is usually five to ten days and the most frequently occurred symptom is jaw stiffness.",
+          "choices": {
+            "A": "Incubation",
+            "B": "The most",
+            "C": "Occurred",
+            "D": "Stiffness"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 36,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Kilauea's numerous eruptions are generally composed in molten lava with little escaping gas and few explosions.",
+          "choices": {
+            "A": "Numerous",
+            "B": "In",
+            "C": "Little",
+            "D": "Few"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 37,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "As the International Dateline at 180 degrees longitude is crossed westerly it becomes necessary to change the date by moving it one day forward.",
+          "choices": {
+            "A": "As the",
+            "B": "Westerly",
+            "C": "Necessary",
+            "D": "By moving"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 38,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "The more directly overhead the Moon is the great is the effect that it exhibits on the Earth.",
+          "choices": {
+            "A": "Directly",
+            "B": "Great",
+            "C": "Is",
+            "D": "Effect"
+          },
+          "correctChoiceKey": "B"
+        },
+        {
+          "number": 39,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "More than 600 million individual bacteria lives on the skin of humans.",
+          "choices": {
+            "A": "Million",
+            "B": "Bacteria",
+            "C": "Lives",
+            "D": "Humans"
+          },
+          "correctChoiceKey": "C"
+        },
+        {
+          "number": 40,
+          "questionType": "ERROR_RECOGNITION",
+          "stem": "Melons most probably originated in Persia and were introduced the North American continent during the sixteenth century.",
+          "choices": {
+            "A": "Most probably",
+            "B": "In",
+            "C": "Introduced",
+            "D": "During"
+          },
+          "correctChoiceKey": "C"
+        }
+      ],
+      "passages": []
+    },
+    {
+      "type": "READING",
+      "title": "Reading Comprehension",
+      "position": 3,
+      "questions": [],
+      "passages": [
+        {
+          "position": 1,
+          "title": "Passage 1 — Lake Vostok",
+          "body": "A rather surprising geographical feature of Antarctica is that a huge freshwater lake, one of the world’s largest and deepest, lies hidden there under four kilometers of ice. Now known as Lake Vostok, this huge body of water is located under the ice block that comprises Antarctica. The lake is able to exist in its unfrozen State beneath this block of ice because its waters are warmed by geothermal heat from the earth’s core.\n\nThe thick glacier above Lake Vostok actually insulates it from the frigid temperatures (the lowest ever recorded on Earth) on the surface. The lake was first discovered in the 1970s while a research team was conducting an aerial survey of the area. Radio waves from the survey equipment penetrated the ice and revealed a body of water of indeterminate size.\n\nIt was not until much more recently that data collected by satellite made scientists aware of the tremendous size of the lake; the satellite-borne radar detected an extremely flat region where the ice remains level because it is floating on the water of the lake. The discovery of such a huge freshwater lake trapped under Antarctica is of interest to the scientific community because of the potential that the lake contains ancient microbes that have survived for thousands upon thousands of years, unaffected by factors such as nuclear fallout and elevated ultraviolet light that have affected organisms in more exposed areas. The downside of the discovery, however, lies in the difficulty of conducting research on the lake in such a harsh climate and in the problems associated with obtaining uncontaminated samples from the lake without actually exposing the lake to contamination.\n\nScientists are looking for possible ways to accomplish this.",
+          "questions": [
+            {
+              "number": 1,
+              "questionType": "MCQ",
+              "stem": "The purpose of the passage is to:",
+              "choices": {
+                "A": "explain how Lake Vostok was discovered",
+                "B": "provide satellite data concerning Antarctica",
+                "C": "discuss future plans for Lake Vostok",
+                "D": "present an unexpected aspect of Antarctica’s geography"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 2,
+              "questionType": "MCQ",
+              "stem": "The word \"lies\" in line 2 could best be replaced by:",
+              "choices": {
+                "A": "sleeps",
+                "B": "sits",
+                "C": "tells falsehoods",
+                "D": "inclines"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 3,
+              "questionType": "MCQ",
+              "stem": "What is true of Lake Vostok?",
+              "choices": {
+                "A": "It is completely frozen.",
+                "B": "It is not a saltwater lake.",
+                "C": "It is beneath a thick slab of ice.",
+                "D": "It is heated by the sun."
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 4,
+              "questionType": "MCQ",
+              "stem": "Which of the following is closest in meaning to \"frigid\" in line 6?",
+              "choices": {
+                "A": "Extremely cold",
+                "B": "Never changing",
+                "C": "Quite harsh",
+                "D": "Rarely recorded"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 5,
+              "questionType": "MCQ",
+              "stem": "All of the following are true about the 1970 survey of Antarctica EXCEPT that it:",
+              "choices": {
+                "A": "was conducted by air",
+                "B": "made use of radio waves",
+                "C": "did not measure the exact size of the lake",
+                "D": "was controlled by a satellite"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 6,
+              "questionType": "MCQ",
+              "stem": "It can be inferred from the passage that the ice would not be flat if:",
+              "choices": {
+                "A": "there were no lake",
+                "B": "the lake were not so big",
+                "C": "Antarctica were not so cold",
+                "D": "radio waves were not used"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 7,
+              "questionType": "MCQ",
+              "stem": "The word \"microbes\" in line 13 could best be replaced by which of the following?",
+              "choices": {
+                "A": "Pieces of dust",
+                "B": "Trapped bubbles",
+                "C": "Tiny organisms",
+                "D": "Rays of light"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 8,
+              "questionType": "MCQ",
+              "stem": "The passage mentions which of the following as a reason for the importance of Lake Vostok to scientists?",
+              "choices": {
+                "A": "It can be studied using radio waves.",
+                "B": "It may contain uncontaminated microbes.",
+                "C": "It may have elevated levels of ultraviolet light.",
+                "D": "It has already been contaminated."
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 9,
+              "questionType": "MCQ",
+              "stem": "The word \"downside\" in line 15 is closest in meaning to:",
+              "choices": {
+                "A": "bottom level",
+                "B": "negative aspect",
+                "C": "underside",
+                "D": "buried section"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 10,
+              "questionType": "MCQ",
+              "stem": "The paragraph following the passage most probably discusses:",
+              "choices": {
+                "A": "further discoveries on the surface of Antarctica",
+                "B": "problems with satellite-borne radar equipment",
+                "C": "ways to study Lake Vostok without contaminating it",
+                "D": "the harsh climate of Antarctica"
+              },
+              "correctChoiceKey": "C"
+            }
+          ]
+        },
+        {
+          "position": 2,
+          "title": "Passage 2 — American Monetary System",
+          "body": "In the American colonies there was little money. England did not supply the colonies with coins and it did not allow the colonies to make their own coins, except for the Massachusetts Bay Colony, which received permission for a short period in 1652 to make several kinds of silver coins. England wanted to keep money out of America as a means of controlling trade: America was forced to trade only with England if it did not have the money to buy products from other countries.\n\nThe result during this prerevolutionary period was that the colonists used various goods in place of money: beaver pelts, Indian wampum, and tobacco leaves were all commonly used substitutes for money. The colonists also made use of any foreign coins they could obtain. Dutch, Spanish, French, and English coins were all in use in the American colonies.\n\nDuring the Revolutionary War, funds were needed to finance the war, so each of the individual States and the Continental Congress issued paper money. So much of this paper money was printed that, by the end of the war, almost no one would accept it. As a result trade in goods and the use of foreign coins still flourished during this period.\n\nBy the time the Revolutionary War had been won by the American colonists, the monetary system was in a State of total disarray. To remedy this situation, the new Constitution of the United States, approved in 1789, allowed Congress to issue money. The individual States could no longer have their own money supply.\n\nA few years later, the Coinage Act of 1792 made the dollar the official currency of the United States and put the country on a bimetallic Standard. In this bimetallic system, both gold and silver were legal money, and the rate of exchange of silver to gold was fixed by the govemment at sixteen to one.",
+          "questions": [
+            {
+              "number": 11,
+              "questionType": "MCQ",
+              "stem": "The passage mainly discusses:",
+              "choices": {
+                "A": "American money from past to present",
+                "B": "the English monetary policies in colonial America",
+                "C": "the effect of the Revolution on American money",
+                "D": "the American monetary system of the seventeenth and eighteenth centuries"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 12,
+              "questionType": "MCQ",
+              "stem": "The passage indicates that during the colonial period money was:",
+              "choices": {
+                "A": "supplied by England",
+                "B": "coined by the colonists",
+                "C": "scarce",
+                "D": "used extensively for trade"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 13,
+              "questionType": "MCQ",
+              "stem": "The Massachusetts Bay Colony was allowed to make coins:",
+              "choices": {
+                "A": "continuously from the inception of the colony",
+                "B": "throughout the seventeenth century",
+                "C": "from 1652 until the Revolutionary War",
+                "D": "for a short time during one year"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 14,
+              "questionType": "MCQ",
+              "stem": "The expression \"a means of\" in line 4 could best be replaced by:",
+              "choices": {
+                "A": "an example of",
+                "B": "a method for",
+                "C": "a result of",
+                "D": "a punishment for"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 15,
+              "questionType": "MCQ",
+              "stem": "Which of the following is NOT mentioned in the passage as a substitute for money during the colonial period?",
+              "choices": {
+                "A": "Wampum",
+                "B": "Cotton",
+                "C": "Tobacco",
+                "D": "Beaver furs"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 16,
+              "questionType": "MCQ",
+              "stem": "The pronoun \"it\" in line 12 refers to which of the following?",
+              "choices": {
+                "A": "The Continental Congress",
+                "B": "Paper money",
+                "C": "The war",
+                "D": "Trade in goods"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 17,
+              "questionType": "MCQ",
+              "stem": "It is implied in the passage that at the end of the Revolutionary War a paper dollar was worth:",
+              "choices": {
+                "A": "exactly one dollar",
+                "B": "just under one dollar",
+                "C": "just over one dollar",
+                "D": "almost nothing"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 18,
+              "questionType": "MCQ",
+              "stem": "The word “remedy” in line 15 is closest in meaning to:",
+              "choices": {
+                "A": "resolve",
+                "B": "understand",
+                "C": "renew",
+                "D": "medicate"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 19,
+              "questionType": "MCQ",
+              "stem": "How was the monetary system arranged in the Constitution?",
+              "choices": {
+                "A": "Only the United States Congress could issue money.",
+                "B": "The United States officially went on a bimetallic monetary system.",
+                "C": "Various State governments including Massachusetts could issue money.",
+                "D": "The dollar was made the official currency of the United States."
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 20,
+              "questionType": "MCQ",
+              "stem": "According to the passage, which of the following is NOT true about the bimetallic monetary system?",
+              "choices": {
+                "A": "Either gold or silver could be used as official money.",
+                "B": "Gold could be exchanged for silver at a rate of sixteen to one.",
+                "C": "The monetary system was based on two metals.",
+                "D": "It was established in 1792."
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 21,
+              "questionType": "MCQ",
+              "stem": "The word “fixed” in line 19 is closest in meaning to:",
+              "choices": {
+                "A": "discovered",
+                "B": "repaired",
+                "C": "valued",
+                "D": "set"
+              },
+              "correctChoiceKey": "D"
+            }
+          ]
+        },
+        {
+          "position": 3,
+          "title": "Passage 3 — The Human Brain",
+          "body": "The human brain, with an average weight of 1.4 kilograms, is the control center of the body. It receives information from the senses, processes the information, and rapidly sends out responses; it also Stores the information that is the source of human thoughts and feelings. Each of the three main parts of the brain—the cerebrum, the cerebellum, and the brain stem—has its own role in carrying out these functions.\n\nThe cerebrum is by far the largest of the three parts, taking up 85 percent of the brain by weight. The outside layer of the cerebrum, the cerebral cortex, is a grooved and bumpy surface covering the nerve cells beneath. The various sections of the cerebrum are the sensory cortex, which is responsible for receiving and decoding sensory messages from throughout the body; the motor cortex, which sends action instructions to the skeletal muscles; and the association cortex, which receives, monitors, and processes information.\n\nIt is in the association cortex that the processes that allow humans to think take place. The cerebellum, located below the cerebrum in the back part of the skull, is made of masses of bunched up nerve cells. It is the cerebellum that Controls human balance, coordination, and posture.\n\nThe brain stem, which connects the cerebrum and the spinal cord, Controls various body processes such as breathing and heartbeat. It is the major motor and sensory pathway connecting the body and the cerebrum.",
+          "questions": [
+            {
+              "number": 22,
+              "questionType": "MCQ",
+              "stem": "What is the author’s main purpose?",
+              "choices": {
+                "A": "To describe the functions of the parts of the brain",
+                "B": "To explain how the brain processes information",
+                "C": "To demonstrate the physical composition of the brain",
+                "D": "To give examples of human body functions"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 23,
+              "questionType": "MCQ",
+              "stem": "The word “stores\" in line 3 is closest in meaning to:",
+              "choices": {
+                "A": "shops",
+                "B": "processes",
+                "C": "releases",
+                "D": "stockpiles"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 24,
+              "questionType": "MCQ",
+              "stem": "The passage states that the most massive part of the brain is the:",
+              "choices": {
+                "A": "Cerebrum",
+                "B": "Cerebellum",
+                "C": "Cerebral cortex",
+                "D": "Brain stem"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 25,
+              "questionType": "MCQ",
+              "stem": "The \"cerebral cortex\" in line 7 is:",
+              "choices": {
+                "A": "a layer of the brain beneath the cerebrum",
+                "B": "a layer of nerve cells in the brain",
+                "C": "a part of the brain that makes up 85 percent of the brain",
+                "D": "a ridged layer covering the cerebrum in the brain"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 26,
+              "questionType": "MCQ",
+              "stem": "The sensory cortex:",
+              "choices": {
+                "A": "senses that messages should be sent out to the muscles",
+                "B": "provides a surface covering for nerve cells",
+                "C": "is where the human process of thinking occurs",
+                "D": "receives and processes information from the senses"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 27,
+              "questionType": "MCQ",
+              "stem": "The word \"monitors\" in line 11 is closest in meaning to which of the following?",
+              "choices": {
+                "A": "Keeps track of",
+                "B": "Keeps hold of",
+                "C": "Gets away with",
+                "D": "Gets rid of"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 28,
+              "questionType": "MCQ",
+              "stem": "Which of the following is true about the cerebellum?",
+              "choices": {
+                "A": "It is located above the cerebrum.",
+                "B": "It controls breathing.",
+                "C": "It is responsible for balance.",
+                "D": "It is the outside layer of the cerebrum."
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 29,
+              "questionType": "MCQ",
+              "stem": "What shape does the brain stem most likely have?",
+              "choices": {
+                "A": "Small and round",
+                "B": "Long and thin",
+                "C": "Large and formless",
+                "D": "Short and flat"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 30,
+              "questionType": "MCQ",
+              "stem": "Which of the following could best be used in place of “pathway\" in line 16?",
+              "choices": {
+                "A": "Driveway",
+                "B": "Roadway",
+                "C": "Route",
+                "D": "Street"
+              },
+              "correctChoiceKey": "C"
+            }
+          ]
+        },
+        {
+          "position": 4,
+          "title": "Passage 4 — Edmund Halley’s Diving Bell",
+          "body": "Though Edmund Halley was most famous because of his achievements as an astronomer, he was a scientist of diverse interests and great skill. In addition to studying the skies, Halley was also deeply interested in exploring the unknown depths of the oceans. One of his lesser-known Line accomplishments that was quite remarkable was his design for a diving beli that facilitated exploration of the watery depths.\n\nThe diving beli that Halley designed had a major advantage over the diving bells that were in use prior to his. Earlier diving bells could only make use of the air contained within the beli itself, so divers had to surface when the air inside the beli ran low. Halley's beli was an improvement in that its design allowed for an additional supply of fresh air that enabled a crew of divers to remain underwater for several hours.\n\nThe diving contraption that Halley designed was in the shape of a beli that measured three feet across the top and five feet across the bottom and could hold several divers comfortably; it was open at the bottom so that divers could swim in and out at will. The beli was built of wood, which was first heavily tarred to make it water repellent and was then covered with a half-ton sheet of lead to make the beli heavy enough to sink in water. The beli shape held air inside for the divers to breathe as the beli sank to the bottom.\n\nThe air inside the beli was not the only source of air for the divers to breathe, and it was this improvement that made Halley’s beli superior to its predecessors. In addition to the air already in the beli, air was also supplied to the divers from a lead barrel that was lowered to the ocean floor close to the beli itself. Air flowed through a leather pipe from the lead barrel on the ocean floor to the beli.\n\nThe diver could breath the air from a position inside the beli, or he could move around outside the beli wearing a diving suit that consisted of a lead bell-shaped helmet with a glass viewing window and a leather body suit, with a leather pipe carrying fresh air from the diving beli to the helmet.",
+          "questions": [
+            {
+              "number": 31,
+              "questionType": "MCQ",
+              "stem": "The subject of the preceding passage was most likely Halley's:",
+              "choices": {
+                "A": "childhood",
+                "B": "work as an astronomer",
+                "C": "many different interests",
+                "D": "invention of the diving bell"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 32,
+              "questionType": "MCQ",
+              "stem": "Which of the following best expresses the subject of this passage?",
+              "choices": {
+                "A": "Halley’s work as an astronomer",
+                "B": "Halley’s many different interests",
+                "C": "Halley’s invention of a contraption for diving",
+                "D": "Halley’s experiences as a diver"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 33,
+              "questionType": "MCQ",
+              "stem": "Halley’s bell was better than its predecessors because it:",
+              "choices": {
+                "A": "was bigger",
+                "B": "provided more air",
+                "C": "weighed less",
+                "D": "could rise more quickly"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 34,
+              "questionType": "MCQ",
+              "stem": "The expression “ran low” in line 8 is closest in meaning to:",
+              "choices": {
+                "A": "moved slowly",
+                "B": "had been replenished",
+                "C": "sank to the bottom",
+                "D": "was almost exhausted"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 35,
+              "questionType": "MCQ",
+              "stem": "How long could divers stay underwater in Halley’s bell?",
+              "choices": {
+                "A": "Just a few seconds",
+                "B": "Only a few minutes",
+                "C": "For hours at a time",
+                "D": "For days on end"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 36,
+              "questionType": "MCQ",
+              "stem": "It is NOT stated in the passage that Halley’s bell:",
+              "choices": {
+                "A": "was wider at the top than at the bottom",
+                "B": "was made of tarred wood",
+                "C": "was completely enclosed",
+                "D": "could hold more than one diver"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 37,
+              "questionType": "MCQ",
+              "stem": "In which paragraph does the author describe the diving bells that preceded Halley's?",
+              "choices": {
+                "A": "In the first paragraph",
+                "B": "In the second paragraph",
+                "C": "In the third paragraph",
+                "D": "In the last paragraph"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 38,
+              "questionType": "MCQ",
+              "stem": "This passage would most likely be assigned reading in a course on:",
+              "choices": {
+                "A": "Astronomy",
+                "B": "Recreation",
+                "C": "Oceanography",
+                "D": "Physiology"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 39,
+              "questionType": "MCQ",
+              "stem": "The expression “at will\" in line 13 could best be replaced by:",
+              "choices": {
+                "A": "in the future",
+                "B": "as they wanted",
+                "C": "with great speed",
+                "D": "upside down"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 40,
+              "questionType": "MCQ",
+              "stem": "It can be inferred from the passage that were Halley's bell not covered with lead it would:",
+              "choices": {
+                "A": "Float",
+                "B": "Get wet",
+                "C": "Trap the divers",
+                "D": "Suffocate the divers"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 41,
+              "questionType": "MCQ",
+              "stem": "Where in the passage does the author indicate how air traveled from the barrel to the bell?",
+              "choices": {
+                "A": "Lines 8-10",
+                "B": "Lines 11-13",
+                "C": "Lines 17-18",
+                "D": "Line 20"
+              },
+              "correctChoiceKey": "D"
+            }
+          ]
+        },
+        {
+          "position": 5,
+          "title": "Passage 5 — Paul Bunyan",
+          "body": "Paul Bunyan is perhaps America’s best-known folk hero. A fictional logger of incredible strength, he was most likely based on an actual nineteenth-century logger from the northern United States or Canada. As a folk hero, he struck a chord with Americans on some level, perhaps because he w’ss, incredibly strong but also because he was hard-working and capable, ingenious in solving problems, and fun-loving.\n\nThough there is evidence that Paul Bunyan tales were part of oral tradition in the nineteenth century, Paul Bunyan stories did not appear in written form until the early twentieth century. Joumalist James McGillivray included descriptions of Bunyan in a series of essays entitled “The Round River Drive,\" which appeared in a number of Midwestem newspapers between 1906 and 1910. However, it was through an extensive advertising campaign that Paul Bunyan moved solidly into print.\n\nRecognizing the appeal of Paul Bunyan as a figure for his company’s advertising, William Laughead, an advertising executive for the Red River Lumber Company, initiated a campaign that consisted of a series of publications featuring Paul Bunyan. For several decades, the company distributed these publications free of charge and made no attempt to obtain a Copyright on them. In fact, the company vigorously encouraged other writers to make use of Paul Bunyan because it felt that the use of this character enhanced the name recognition of the Red River Lumber Company inasmuch as the name of the folk hero and the name of the company had become interwoven.\n\nThe Bunyan stories published by Red River and further circulated by others were tali tales of gigantic proportions. In these tales, Bunyan is depicted as a man of superhuman proportions, who is strong, hard-working, entrepreneurial, and innovative. In one story, for example, Paul is credited with digging the Great Lakes in order to create a watering hole for his giant ox, Babe.\n\nIn another of these tales, Paul caused an entire winter of blue snow to fail by swearing a blue streak after he injured himself by smashing his thumb with a large hammer. A third story in the series describes Paul’s role in establishing the Mississippi River. Fascination with Paul Bunyan has continued to grow, and today he is a Standard of American folklore.\n\nThe prevalence of Bunyan as a figure of folklore today is evidenced by references to him in countless stories, cartoons, poems, and songs as well as the numerous community festivals and logging competitions featuring Paul Bunyan that can be found throughout the sections of the country where logging has a strong tradition.",
+          "questions": [
+            {
+              "number": 42,
+              "questionType": "MCQ",
+              "stem": "The purpose of this passage is to:",
+              "choices": {
+                "A": "present the actual feats of a real-life logger",
+                "B": "discuss a \"larger than life\" folk hero",
+                "C": "describe logging in North America",
+                "D": "provide an overview of American folktales"
+              },
+              "correctChoiceKey": "B"
+            },
+            {
+              "number": 43,
+              "questionType": "MCQ",
+              "stem": "It is NOT stated in the passage that Paul Bunyan is known for his:",
+              "choices": {
+                "A": "unusual strength",
+                "B": "dedication to work",
+                "C": "ingenuity in difficult situations",
+                "D": "serious nature"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 44,
+              "questionType": "MCQ",
+              "stem": "The passage states that Paul Bunyan tales first appeared:",
+              "choices": {
+                "A": "in oral stories",
+                "B": "in a series of essays",
+                "C": "in newspapers",
+                "D": "in advertising"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 45,
+              "questionType": "MCQ",
+              "stem": "Where in the passage does the author discuss a weather phenomenon that Paul Bunyan supposedly caused?",
+              "choices": {
+                "A": "Lines 8-9",
+                "B": "Lines 14-15",
+                "C": "Lines 19-20",
+                "D": "Lines 22-24"
+              },
+              "correctChoiceKey": "D"
+            },
+            {
+              "number": 46,
+              "questionType": "MCQ",
+              "stem": "The word “countless” in line 28 could best be replaced by the expression:",
+              "choices": {
+                "A": "a large number of",
+                "B": "a specified number of",
+                "C": "an insubstantial number of",
+                "D": "an overestimated number of"
+              },
+              "correctChoiceKey": "A"
+            },
+            {
+              "number": 47,
+              "questionType": "MCQ",
+              "stem": "Which paragraph describes the plots of some of the tales of Paul Bunyan?",
+              "choices": {
+                "A": "The second paragraph",
+                "B": "The third paragraph",
+                "C": "The fourth paragraph",
+                "D": "The fifth paragraph"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 48,
+              "questionType": "MCQ",
+              "stem": "Which of the following CANNOT be inferred about the Red River Lumber Company's advertising campaign featuring Paul Bunyan?",
+              "choices": {
+                "A": "It endured for quite a time.",
+                "B": "The company did not protect its ownership of the stories.",
+                "C": "The campaign did little to enhance the company’s profitability.",
+                "D": "The company wanted the name Paul Bunyan to be known as widely as possible."
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 49,
+              "questionType": "MCQ",
+              "stem": "The pronoun “them\" in line 15 refers to:",
+              "choices": {
+                "A": "series",
+                "B": "decades",
+                "C": "publications",
+                "D": "writers"
+              },
+              "correctChoiceKey": "C"
+            },
+            {
+              "number": 50,
+              "questionType": "MCQ",
+              "stem": "The word “interwoven” in line 18 could best be replaced by:",
+              "choices": {
+                "A": "unfashionable",
+                "B": "mixed together",
+                "C": "not compatible",
+                "D": "too separate"
+              },
+              "correctChoiceKey": "B"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
