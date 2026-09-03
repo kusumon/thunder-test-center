@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
+import { readEnv } from "@/lib/env";
 
 /**
  * Sertifikat — SRS §8 (FR-012 s.d. FR-016).
@@ -12,10 +13,10 @@ import { prisma } from "@/lib/db";
  */
 export function getCertificateSettings() {
   return {
-    institutionName: process.env.CERTIFICATE_INSTITUTION_NAME || "Thunder Test Center",
-    signatoryName: process.env.CERTIFICATE_SIGNATORY_NAME || "",
-    signatoryPosition: process.env.CERTIFICATE_SIGNATORY_POSITION || "",
-    prefix: process.env.CERTIFICATE_PREFIX || "TOEFLP",
+    institutionName: readEnv("CERTIFICATE_INSTITUTION_NAME") ?? "Thunder Test Center",
+    signatoryName: readEnv("CERTIFICATE_SIGNATORY_NAME") ?? "",
+    signatoryPosition: readEnv("CERTIFICATE_SIGNATORY_POSITION") ?? "",
+    prefix: readEnv("CERTIFICATE_PREFIX") ?? "TOEFLP",
   };
 }
 

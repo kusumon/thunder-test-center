@@ -1,6 +1,7 @@
 import { getParticipantSession } from "@/lib/session";
 import { getCertificateWithAttempt, getCertificateSettings } from "@/lib/certificate";
 import { renderCertificatePdf } from "@/lib/certificatePdf";
+import { readEnv } from "@/lib/env";
 
 /**
  * Unduh PDF sertifikat — FR-015.
@@ -35,7 +36,7 @@ export async function GET(
   }
 
   const settings = getCertificateSettings();
-  const baseUrl = process.env.APP_BASE_URL || new URL(request.url).origin;
+  const baseUrl = readEnv("APP_BASE_URL") ?? new URL(request.url).origin;
 
   const pdfBuffer = await renderCertificatePdf({
     certificateNumber: certificate.certificateNumber,
