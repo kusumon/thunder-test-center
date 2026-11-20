@@ -90,6 +90,10 @@ export function AdminNav({ email, pendingOrders }: { email: string; pendingOrder
             <LineIcon name="arrowRight" size={18} />
             <span>Lihat website peserta</span>
           </a>
+          <Link href="/admin/settings#password" className="adm-nav-link">
+            <LineIcon name="shield" size={18} />
+            <span>Ganti password</span>
+          </Link>
           <div className="adm-user">
             <span className="text-truncate" title={email}>
               {email}

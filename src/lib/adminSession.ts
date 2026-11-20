@@ -12,6 +12,10 @@ import { prisma } from "@/lib/db";
  * tapi tetap diverifikasi ulang ke database setiap request supaya admin
  * yang dihapus/berubah role langsung kehilangan akses tanpa menunggu
  * cookie kedaluwarsa.
+ *
+ * Tanda tangan juga diikat ke hash password admin saat ini. Begitu password
+ * diganti, SEMUA cookie lama (perangkat lain, atau cookie yang sempat
+ * dicuri) otomatis tidak sah lagi — tanpa perlu tabel sesi.
  */
 const COOKIE_NAME = "toefl_admin_session";
 const MAX_AGE_SECONDS = 60 * 60 * 8; // 8 jam
@@ -22,8 +26,8 @@ function secret(): string {
   return value;
 }
 
-function sign(payload: string): string {
-  return createHmac("sha256", secret()).update(payload).digest("hex");
+function sign(payload: string, passwordHash: string): string {
+  return createHmac("sha256", secret()).update(`${payload}|${passwordHash}`).digest("hex");
 }
 
 function safeEqual(a: string, b: string): boolean {
@@ -33,9 +37,13 @@ function safeEqual(a: string, b: string): boolean {
 }
 
 export async function createAdminSession(adminUserId: string) {
+  const { passwordHash } = await prisma.adminUser.findUniqueOrThrow({
+    where: { id: adminUserId },
+    select: { passwordHash: true },
+  });
   const expiresAt = Date.now() + MAX_AGE_SECONDS * 1000;
   const payload = `${adminUserId}.${expiresAt}`;
-  const token = `${payload}.${sign(payload)}`;
+  const token = `${payload}.${sign(payload, passwordHash)}`;
 
   const store = await cookies();
   store.set(COOKIE_NAME, token, {
@@ -62,10 +70,15 @@ export async function getAdminSession() {
   if (parts.length !== 3) return null;
   const [adminUserId, expiresAtRaw, signature] = parts;
   const payload = `${adminUserId}.${expiresAtRaw}`;
-  if (!safeEqual(signature, sign(payload))) return null;
 
   const expiresAt = Number(expiresAtRaw);
   if (!Number.isFinite(expiresAt) || Date.now() > expiresAt) return null;
+  if (!/^[0-9a-f-]{36}$/i.test(adminUserId)) return null;
 
-  return prisma.adminUser.findUnique({ where: { id: adminUserId } });
+  const admin = await prisma.adminUser.findUnique({ where: { id: adminUserId } });
+  if (!admin) return null;
+  // Diverifikasi SETELAH membaca hash password terbaru dari database —
+  // cookie yang dibuat sebelum password diganti tidak akan cocok lagi.
+  if (!safeEqual(signature, sign(payload, admin.passwordHash))) return null;
+  return admin;
 }

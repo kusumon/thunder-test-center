@@ -1,7 +1,12 @@
 /**
- * Buat atau reset akun admin pertama dari ADMIN_EMAIL / ADMIN_PASSWORD di
- * .env. Tidak ada halaman pendaftaran admin publik (NFR-SEC-002) — ini
- * satu-satunya jalan membuat/mengganti password admin di MVP.
+ * Buat akun admin pertama, atau RESET password-nya, dari ADMIN_EMAIL /
+ * ADMIN_PASSWORD di .env. Tidak ada halaman pendaftaran admin publik
+ * (NFR-SEC-002).
+ *
+ * Untuk penggantian password sehari-hari, pakai menu Admin → Pengaturan →
+ * "Ganti password admin". Skrip ini hanya untuk darurat (mis. lupa
+ * password): menjalankannya MENIMPA password yang sudah diganti lewat
+ * dashboard dengan nilai di .env.
  *
  * Jalankan: npm run db:seed-admin
  */

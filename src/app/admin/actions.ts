@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { attemptAdminLogin } from "@/lib/adminAuth";
 import { createAdminSession, destroyAdminSession, getAdminSession } from "@/lib/adminSession";
@@ -41,6 +42,46 @@ async function requireAdmin() {
 
 function fail(error: unknown, fallback: string): ActionResult {
   return { ok: false, message: error instanceof Error ? error.message : fallback };
+}
+
+const MIN_PASSWORD_LENGTH = 10;
+
+/**
+ * Ganti password admin yang sedang login. Wajib memasukkan password lama
+ * (supaya orang yang menemukan laptop dalam keadaan login tidak bisa
+ * mengambil alih akun). Setelah diganti, perangkat lain otomatis keluar —
+ * lihat catatan di lib/adminSession.ts — sedangkan perangkat ini diberi
+ * cookie baru supaya tetap masuk.
+ */
+export async function changePasswordAction(_prev: ActionResult, formData: FormData): Promise<ActionResult> {
+  const admin = await requireAdmin();
+  const current = String(formData.get("currentPassword") ?? "");
+  const next = String(formData.get("newPassword") ?? "");
+  const confirm = String(formData.get("confirmPassword") ?? "");
+
+  if (!current || !next || !confirm) return { ok: false, message: "Semua kolom wajib diisi." };
+  if (!(await bcrypt.compare(current, admin.passwordHash))) {
+    return { ok: false, message: "Password lama salah." };
+  }
+  if (next.length < MIN_PASSWORD_LENGTH) {
+    return { ok: false, message: `Password baru minimal ${MIN_PASSWORD_LENGTH} karakter.` };
+  }
+  if (next === current) return { ok: false, message: "Password baru harus berbeda dari password lama." };
+  if (next !== confirm) return { ok: false, message: "Ulangi password baru — keduanya belum sama." };
+  if (next.toLowerCase().includes(admin.email.split("@")[0].toLowerCase())) {
+    return { ok: false, message: "Password baru jangan memuat nama email Anda." };
+  }
+
+  const passwordHash = await bcrypt.hash(next, 12);
+  await prisma.adminUser.update({
+    where: { id: admin.id },
+    data: { passwordHash, failedLoginCount: 0, lockedUntil: null },
+  });
+  await createAdminSession(admin.id);
+  return {
+    ok: true,
+    message: "Password berhasil diganti. Perangkat lain yang masih login otomatis keluar.",
+  };
 }
 
 /** Aktifkan/nonaktifkan paket soal — hanya paket aktif yang diberikan ke peserta (FR-003). */

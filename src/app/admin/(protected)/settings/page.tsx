@@ -1,6 +1,8 @@
 import { getSettings, formatRupiah } from "@/lib/settings";
 import { saveSettingsAction } from "@/app/admin/actions";
+import { getAdminSession } from "@/lib/adminSession";
 import { ActionForm } from "@/components/admin/ActionForm";
+import { PasswordChangeForm } from "@/components/admin/PasswordChangeForm";
 import { LineIcon } from "@/components/LineIcon";
 
 function Field({
@@ -38,7 +40,7 @@ function Field({
 }
 
 export default async function AdminSettingsPage() {
-  const s = await getSettings();
+  const [s, admin] = await Promise.all([getSettings(), getAdminSession()]);
   const missing = [
     !s.bank_account_number && "nomor rekening",
     !s.bank_account_holder && "nama pemilik rekening",
@@ -135,6 +137,18 @@ export default async function AdminSettingsPage() {
           </div>
         </div>
       </ActionForm>
+
+      <div className="tp-card p-4 mt-4" id="password" style={{ scrollMarginTop: 84 }}>
+        <div className="d-flex align-items-center gap-2 mb-1">
+          <LineIcon name="shield" size={20} className="text-primary" />
+          <h2 className="h6 mb-0">Ganti password admin</h2>
+        </div>
+        <p className="small text-muted mb-3">
+          Untuk akun <strong className="text-dark">{admin?.email}</strong>. Setelah diganti, perangkat lain yang
+          masih login akan otomatis keluar.
+        </p>
+        <PasswordChangeForm />
+      </div>
 
       <p className="small text-muted mt-4 mb-0">
         Catatan: nomor WhatsApp peserta di daftar pembayaran adalah data pribadi — jangan dibagikan ke pihak lain.
