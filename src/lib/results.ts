@@ -34,12 +34,29 @@ export async function submitAttempt(attemptId: string) {
 
   if (attempt.status === "COMPLETED") return attempt;
 
+  // Bagian dianggap selesai kalau sudah disubmit ATAU waktunya sudah habis —
+  // aturan yang sama dengan assertSectionUnlocked() & halaman review.
+  // Sebelumnya di sini hanya submittedAt yang diterima, sehingga peserta
+  // yang waktunya habis saat tab tertutup (auto-submit browser tidak sempat
+  // jalan) terjebak di halaman "Kirim Jawaban" dengan error selamanya.
+  const now = new Date();
+  const expiredUnsubmitted: { id: string; endsAt: Date }[] = [];
   for (const type of SECTION_ORDER) {
     const section = attempt.testPackage.sections.find((s) => s.type === type);
     const session = attempt.sectionSessions.find((s) => s.sectionId === section?.id);
-    if (!session?.submittedAt) {
-      throw new Error(`Bagian ${type} belum disubmit, tidak bisa mengirim attempt.`);
+    if (!session) {
+      throw new Error(`Bagian ${type} belum dimulai, tidak bisa mengirim attempt.`);
     }
+    if (!session.submittedAt) {
+      if (now.getTime() < session.endsAt.getTime()) {
+        throw new Error(`Bagian ${type} masih berjalan, tidak bisa mengirim attempt.`);
+      }
+      expiredUnsubmitted.push({ id: session.id, endsAt: session.endsAt });
+    }
+  }
+  // Catat waktu selesai = saat waktunya habis, supaya data & statistik admin konsisten.
+  for (const s of expiredUnsubmitted) {
+    await prisma.attemptSectionSession.update({ where: { id: s.id }, data: { submittedAt: s.endsAt } });
   }
 
   const questions = await prisma.question.findMany({
