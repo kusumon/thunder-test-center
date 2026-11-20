@@ -27,10 +27,9 @@ async function getSummary() {
     prisma.certificate.count(),
     prisma.certificateOrder.aggregate({ where: { status: "DISETUJUI" }, _sum: { amount: true } }),
     // Berapa peserta yang menuntaskan tiap bagian — untuk melihat di mana mereka berhenti.
-    prisma.attemptSectionSession.groupBy({
-      by: ["sectionId"],
+    prisma.attemptSectionSession.findMany({
       where: { submittedAt: { not: null } },
-      _count: { _all: true },
+      select: { attemptId: true, section: { select: { type: true } } },
     }),
     prisma.attempt.findMany({
       orderBy: { startedAt: "desc" },
@@ -39,17 +38,22 @@ async function getSummary() {
     }),
   ]);
 
-  // groupBy per sectionId → jumlahkan per tipe bagian (paket bisa lebih dari satu).
-  const sections = await prisma.section.findMany({
-    where: { id: { in: sectionSubmissions.map((s) => s.sectionId) } },
-    select: { id: true, type: true },
-  });
-  const typeById = new Map(sections.map((s) => [s.id, s.type]));
-  const finishedPerSection = { LISTENING: 0, STRUCTURE: 0, READING: 0 };
-  for (const row of sectionSubmissions) {
-    const type = typeById.get(row.sectionId);
-    if (type) finishedPerSection[type] += row._count._all;
+  // Tes yang sudah dapat skor pasti menuntaskan semua bagian — dihitung juga,
+  // supaya angka tidak bertentangan untuk data lama yang catatan per-bagiannya
+  // tidak lengkap.
+  const completedIds = await prisma.attempt.findMany({ where: { status: "COMPLETED" }, select: { id: true } });
+  const finishedSets = { LISTENING: new Set<string>(), STRUCTURE: new Set<string>(), READING: new Set<string>() };
+  for (const row of sectionSubmissions) finishedSets[row.section.type].add(row.attemptId);
+  for (const { id } of completedIds) {
+    finishedSets.LISTENING.add(id);
+    finishedSets.STRUCTURE.add(id);
+    finishedSets.READING.add(id);
   }
+  const finishedPerSection = {
+    LISTENING: finishedSets.LISTENING.size,
+    STRUCTURE: finishedSets.STRUCTURE.size,
+    READING: finishedSets.READING.size,
+  };
 
   return {
     pendingOrders,

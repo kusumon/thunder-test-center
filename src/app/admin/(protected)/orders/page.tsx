@@ -115,7 +115,9 @@ export default async function AdminOrdersPage({
                   style={{ background: "linear-gradient(135deg, #eff6ff, #ecfeff)" }}
                 >
                   <div>
-                    <div className="adm-label">Cari nominal ini di mutasi</div>
+                    <div className="adm-label">
+                      {order.status === "DISETUJUI" ? "Nominal transfer" : "Cari nominal ini di mutasi"}
+                    </div>
                     <div className="fs-3 fw-bold tp-text-gradient lh-sm">{formatRupiah(order.amount)}</div>
                   </div>
                   <CopyButton value={String(order.amount)} />

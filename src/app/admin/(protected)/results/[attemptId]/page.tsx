@@ -205,7 +205,11 @@ export default async function AdminResultDetailPage({ params }: { params: Promis
                       <tr key={question.id}>
                         <td className="text-muted">{question.number}</td>
                         <td className="small" style={{ maxWidth: 380 }}>
-                          {question.stem}
+                          {section.type === "LISTENING" && question.stem.startsWith("Choose the best answer") ? (
+                            <span className="text-muted">(soal dari audio)</span>
+                          ) : (
+                            question.stem
+                          )}
                         </td>
                         <td className="small">
                           {answer ? (

@@ -42,8 +42,11 @@ export function AdminNav({ email, pendingOrders }: { email: string; pendingOrder
           </svg>
           {pendingOrders > 0 && <span className="adm-dot" />}
         </button>
-        <span className="fw-bold text-dark">{current?.label ?? "Admin"}</span>
-        <ThunderMark size={30} id="adm-mobile" />
+        <Link href="/admin" className="d-flex align-items-center gap-2 text-decoration-none">
+          <ThunderMark size={30} id="adm-mobile" />
+          <span className="fw-bold text-dark">Panel Admin</span>
+        </Link>
+        <span style={{ width: 42 }} aria-hidden="true" />
       </header>
 
       {open && <div className="adm-backdrop d-lg-none" onClick={() => setOpen(false)} aria-hidden="true" />}
