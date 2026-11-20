@@ -15,13 +15,14 @@ export function ClaimCodeForm() {
         id="claimCode"
         name="claimCode"
         type="text"
-        className={`form-control form-control-lg font-monospace mb-2 ${state?.error ? "is-invalid" : ""}`}
+        className={`form-control form-control-lg font-monospace text-center mb-2 ${state?.error ? "is-invalid" : ""}`}
+        style={{ letterSpacing: "0.12em" }}
         placeholder="TPC-XXXX-XXXX"
         autoComplete="off"
         required
       />
       {state?.error && <div className="text-danger small mb-2">{state.error}</div>}
-      <button type="submit" className="btn tp-btn-primary w-100 mt-2" disabled={pending}>
+      <button type="submit" className="btn tp-btn-primary btn-lg w-100 mt-2" disabled={pending}>
         {pending ? "Membuka..." : "Buka Sertifikat"}
       </button>
     </form>

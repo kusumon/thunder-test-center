@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { saveAnswerAction, submitSection, requestAudioPlay } from "@/app/actions";
 import { Icon } from "@/components/Icon";
+import { LineIcon, SECTION_ICON } from "@/components/LineIcon";
 import { SECTION_INFO } from "@/lib/sectionLabels";
 import type { SectionTypeValue } from "@/lib/attempts";
 import type { PublicPassage, PublicQuestion } from "@/lib/sections";
@@ -291,31 +292,46 @@ export function SectionRunner({
   return (
     <div>
       {/* Bilah atas: selalu terlihat, berisi posisi soal dan sisa waktu. */}
-      <div className="bg-white border-bottom sticky-top" style={{ zIndex: 1020 }}>
-        <div className="container d-flex justify-content-between align-items-center py-2 gap-2">
-          <div className="lh-sm">
-            <div className="fw-semibold">{info.short}</div>
-            <div className="small text-muted">
-              Soal {index + 1}/{ordered.length} · Terjawab {answeredCount}/{ordered.length}
+      <div className="tp-testbar">
+        <div
+          className="container d-flex justify-content-between align-items-center py-2 gap-2"
+          style={{ maxWidth: passages.length > 0 ? undefined : 820 }}
+        >
+          <div className="d-flex align-items-center gap-2 lh-sm">
+            <div className="tp-icon-chip is-sm is-solid">
+              <LineIcon name={SECTION_ICON[sectionType]} size={18} />
+            </div>
+            <div>
+              <div className="fw-bold text-dark">{info.short}</div>
+              <div className="small text-muted">
+                Terjawab {answeredCount} dari {ordered.length}
+              </div>
             </div>
           </div>
-          <div className="text-end lh-sm">
-            <div className="small text-muted">Sisa waktu</div>
-            <div className={`tp-timer fs-4 ${veryLowTime ? "is-low" : lowTime ? "text-warning" : "text-primary"}`}>
-              {formatTime(remaining)}
-            </div>
+          <div
+            className={`tp-timer ${veryLowTime ? "is-low" : lowTime ? "is-warn" : ""}`}
+            title="Sisa waktu bagian ini"
+            aria-label={`Sisa waktu ${formatTime(remaining)}`}
+          >
+            <LineIcon name="clock" size={18} />
+            {formatTime(remaining)}
           </div>
         </div>
+        <div className="tp-progress-line" aria-hidden="true">
+          <span style={{ width: `${(answeredCount / Math.max(1, ordered.length)) * 100}%` }} />
+        </div>
         {lowTime && remaining > 0 && (
-          <div className="text-center small py-1 px-2" style={{ background: "#fff3cd" }}>
+          <div className="text-center small py-1 px-2 fw-semibold" style={{ background: "#fef3c7", color: "#92400e" }}>
             Waktu tinggal sedikit. Jawaban yang sudah dipilih tersimpan otomatis.
           </div>
         )}
       </div>
 
-      <div className="container py-4">
+      {/* Tanpa bacaan (Listening/Structure) kolom soal dibuat ramping supaya
+          pilihan jawaban tidak terbentang selebar layar desktop. */}
+      <div className="container py-4" style={{ maxWidth: passages.length > 0 ? undefined : 820 }}>
         {sectionType === "LISTENING" && (
-          <div className="tp-card p-3 mb-4">
+          <div className="tp-player p-3 p-md-4 mb-4">
             <audio
               ref={audioRef}
               onEnded={() => setAudioState("ended")}
@@ -323,36 +339,68 @@ export function SectionRunner({
               style={{ display: "none" }}
             />
 
-            <div className="d-flex align-items-center gap-3 flex-wrap">
+            <div className="d-flex align-items-center gap-3">
               {audioState === "playing" ? (
-                <div className="d-flex align-items-center gap-2 text-success fw-semibold">
-                  <span className="spinner-grow spinner-grow-sm" aria-hidden="true" />
-                  Audio sedang diputar
+                <div className="tp-play-btn" aria-hidden="true">
+                  <span className="tp-wave" style={{ height: 22 }}>
+                    <span style={{ background: "var(--tp-blue)" }} />
+                    <span style={{ background: "var(--tp-blue)" }} />
+                    <span style={{ background: "var(--tp-blue)" }} />
+                  </span>
                 </div>
-              ) : playsLeft > 0 ? (
+              ) : (
                 <button
                   type="button"
-                  className="btn tp-btn-primary btn-lg d-flex align-items-center gap-2"
+                  className="tp-play-btn"
                   onClick={playAudio}
-                  disabled={audioState === "requesting"}
+                  disabled={audioState === "requesting" || playsLeft <= 0}
+                  aria-label="Putar audio"
                 >
-                  <Icon name="play" size={20} />
-                  {audioState === "requesting"
-                    ? "Memuat audio..."
-                    : audioState === "ended" || playsLeft < audioMaxPlays
-                      ? "Putar Ulang dari Awal"
-                      : "Putar Audio"}
+                  {audioState === "requesting" ? (
+                    <span className="spinner-border spinner-border-sm" aria-hidden="true" />
+                  ) : (
+                    <Icon name="play" size={28} />
+                  )}
                 </button>
-              ) : (
-                <div className="fw-semibold text-muted">Batas pemutaran audio sudah habis.</div>
               )}
 
-              <span className="badge text-bg-light border fs-6 fw-normal">
-                Sisa putar: <strong>{playsLeft}</strong> dari {audioMaxPlays}
-              </span>
+              <div className="flex-grow-1">
+                <div className="fw-bold fs-5 lh-sm">
+                  {audioState === "playing"
+                    ? "Audio sedang diputar"
+                    : audioState === "requesting"
+                      ? "Memuat audio..."
+                      : playsLeft <= 0
+                        ? "Batas putar sudah habis"
+                        : audioState === "ended" || playsLeft < audioMaxPlays
+                          ? "Putar ulang dari awal"
+                          : "Putar Audio"}
+                </div>
+                <div className="d-flex align-items-center gap-2 mt-1" style={{ color: "rgba(226,232,240,0.85)" }}>
+                  <span className="small">Sisa putar</span>
+                  <span className="tp-plays" aria-label={`Sisa putar ${playsLeft} dari ${audioMaxPlays}`}>
+                    {Array.from({ length: audioMaxPlays }, (_, i) => (
+                      <span key={i} className={i < playsLeft ? "is-left" : ""} />
+                    ))}
+                  </span>
+                  <span className="small fw-semibold">
+                    {playsLeft}/{audioMaxPlays}
+                  </span>
+                </div>
+              </div>
+
+              {audioState === "playing" && (
+                <span className="tp-wave d-none d-sm-inline-flex" aria-hidden="true">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </span>
+              )}
             </div>
 
-            <div className="small text-muted mt-2">
+            <div className="small mt-3" style={{ color: "rgba(226,232,240,0.85)" }}>
               {audioState === "playing" &&
                 "Jangan tutup atau muat ulang halaman ini. Pilih jawaban tiap soal sambil mendengarkan."}
               {audioState === "idle" &&
@@ -364,7 +412,7 @@ export function SectionRunner({
                 "Audio sudah pernah diputar. Memutar lagi akan mengulang dari soal pertama."}
               {audioState === "ended" && playsLeft > 0 && "Audio selesai. Anda masih boleh memutarnya lagi dari awal."}
               {audioState === "error" && (
-                <span className="text-danger">
+                <span className="fw-semibold" style={{ color: "#fca5a5" }}>
                   Audio gagal diputar. Periksa koneksi internet Anda, lalu tekan tombol putar lagi.
                 </span>
               )}
@@ -376,8 +424,10 @@ export function SectionRunner({
           {current.passage && (
             <div className="col-lg-6">
               <div className="tp-card p-4 tp-test-content tp-passage">
-                <div className="small text-muted mb-2 d-lg-none">Bacaan — geser di dalam kotak ini untuk membaca semuanya</div>
-                {current.passage.title && <h2 className="h6 mb-3">{current.passage.title}</h2>}
+                <div className="small text-muted mb-2 d-lg-none d-flex align-items-center gap-1">
+                  <LineIcon name="book" size={14} /> Bacaan — geser di dalam kotak ini untuk membaca semuanya
+                </div>
+                {current.passage.title && <h2 className="h6 mb-3 text-primary">{current.passage.title}</h2>}
                 <p className="mb-0" style={{ whiteSpace: "pre-line" }}>
                   {highlightPassage(current.passage.body, extractHighlightTerm(current.stem))}
                 </p>
@@ -386,9 +436,14 @@ export function SectionRunner({
           )}
 
           <div className={current.passage ? "col-lg-6" : "col-12"}>
-            <div className="tp-card p-4 tp-test-content">
-              <div className="d-flex justify-content-between align-items-baseline mb-2">
-                <div className="fw-bold text-primary">Soal {current.number}</div>
+            <div className="tp-card tp-card-accent p-4 p-md-4 tp-test-content">
+              <div className="d-flex justify-content-between align-items-center mb-2 gap-2">
+                <div className="d-flex align-items-baseline gap-2">
+                  <span className="fw-bold fs-5 text-dark">Soal {current.number}</span>
+                  <span className="small text-muted">
+                    ({index + 1} dari {ordered.length})
+                  </span>
+                </div>
                 <div className="small" aria-live="polite">
                   {saveStatus === "saving" && <span className="text-muted">Menyimpan...</span>}
                   {saveStatus === "saved" && <span className="text-success">✓ Tersimpan</span>}
@@ -399,8 +454,14 @@ export function SectionRunner({
                 </div>
               </div>
 
-              <div className="small text-muted mb-2">{questionHint(sectionType, current)}</div>
-              {!stemIsGeneric && <p className="fw-semibold fs-6 lh-lg">{stemContent}</p>}
+              <div className="small text-primary fw-semibold mb-2 d-flex align-items-center gap-1">
+                <LineIcon name="info" size={15} /> {questionHint(sectionType, current)}
+              </div>
+              {!stemIsGeneric && (
+                <p className="fw-semibold text-dark mb-3" style={{ fontSize: "1.08rem", lineHeight: 1.85 }}>
+                  {stemContent}
+                </p>
+              )}
 
               <div role="radiogroup" aria-label={`Pilihan jawaban soal ${current.number}`}>
                 {/* Label A/B/C/D dihitung dari POSISI tampil, bukan dari
@@ -431,26 +492,35 @@ export function SectionRunner({
             <div className="d-flex justify-content-between gap-2 mt-3">
               <button
                 type="button"
-                className="btn btn-outline-secondary btn-lg"
+                className="btn tp-btn-ghost btn-lg d-flex align-items-center gap-2"
                 disabled={index === 0}
                 onClick={() => goTo(index - 1)}
               >
-                ← Sebelumnya
+                <LineIcon name="arrowLeft" size={18} />
+                <span className="d-none d-sm-inline">Sebelumnya</span>
               </button>
               {isLastQuestion ? (
-                <button type="button" className="btn btn-success btn-lg" onClick={() => setConfirmOpen(true)}>
-                  Selesai Bagian Ini
+                <button
+                  type="button"
+                  className="btn tp-btn-success btn-lg flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => setConfirmOpen(true)}
+                >
+                  <LineIcon name="check" size={18} strokeWidth={3} /> Selesai Bagian Ini
                 </button>
               ) : (
-                <button type="button" className="btn tp-btn-primary btn-lg" onClick={() => goTo(index + 1)}>
-                  Selanjutnya →
+                <button
+                  type="button"
+                  className="btn tp-btn-primary btn-lg flex-grow-1 d-flex align-items-center justify-content-center gap-2"
+                  onClick={() => goTo(index + 1)}
+                >
+                  Selanjutnya <LineIcon name="arrowRight" size={18} />
                 </button>
               )}
             </div>
 
-            <div className="tp-card p-3 mt-4">
-              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                <div className="fw-semibold small">Daftar soal — tekan nomor untuk pindah</div>
+            <div className="tp-card p-3 p-md-4 mt-4">
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div className="fw-bold small text-dark">Daftar soal — tekan nomor untuk pindah</div>
                 <div className="small text-muted d-flex gap-3">
                   <span>
                     <span className="tp-legend-box is-answered" /> sudah dijawab
@@ -476,7 +546,7 @@ export function SectionRunner({
               {!isLastQuestion && (
                 <button
                   type="button"
-                  className="btn btn-outline-success w-100 mt-3"
+                  className="btn tp-btn-ghost w-100 mt-3"
                   onClick={() => setConfirmOpen(true)}
                 >
                   Sudah selesai? Akhiri bagian {info.short}
@@ -490,6 +560,9 @@ export function SectionRunner({
       {confirmOpen && (
         <div className="tp-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
           <div className="tp-modal">
+            <div className="tp-icon-chip mb-3">
+              <LineIcon name="check" size={24} strokeWidth={2.5} />
+            </div>
             <h2 id="confirm-title" className="h5 mb-2">
               Akhiri bagian {info.short}?
             </h2>
@@ -522,10 +595,10 @@ export function SectionRunner({
               Setelah diakhiri, Anda <strong>tidak bisa kembali</strong> ke bagian ini untuk mengubah jawaban.
             </p>
             <div className="d-flex gap-2">
-              <button type="button" className="btn btn-outline-secondary flex-fill" onClick={() => setConfirmOpen(false)}>
+              <button type="button" className="btn tp-btn-ghost flex-fill" onClick={() => setConfirmOpen(false)}>
                 Kembali Mengerjakan
               </button>
-              <button type="button" className="btn btn-success flex-fill" onClick={() => void doSubmit("manual")}>
+              <button type="button" className="btn tp-btn-success flex-fill" onClick={() => void doSubmit("manual")}>
                 Ya, Akhiri
               </button>
             </div>

@@ -29,8 +29,8 @@ export function CopyButton({ value, label = "Salin" }: { value: string; label?: 
     <button
       type="button"
       onClick={copy}
-      className={`btn btn-sm ${copied ? "btn-success" : "btn-outline-primary"} py-0 px-2`}
-      style={{ fontSize: "0.78rem" }}
+      className={`btn btn-sm ${copied ? "btn-success" : "btn-outline-primary"} py-1 px-3 rounded-pill fw-semibold`}
+      style={{ fontSize: "0.75rem", whiteSpace: "nowrap" }}
     >
       {copied ? "Tersalin ✓" : label}
     </button>

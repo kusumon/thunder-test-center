@@ -31,8 +31,24 @@ export function StartTestForm({ defaultName }: { defaultName: string }) {
           Nama ini akan tercetak di sertifikat, jadi pastikan ejaannya benar.
         </div>
       )}
-      <button type="submit" className="btn tp-btn-primary btn-lg w-100 mt-2" disabled={pending}>
-        {pending ? "Menyiapkan tes..." : "Mulai Tes"}
+      <button
+        type="submit"
+        className="btn tp-btn-primary btn-lg w-100 mt-2 d-flex align-items-center justify-content-center gap-2"
+        disabled={pending}
+      >
+        {pending ? (
+          <>
+            <span className="spinner-border spinner-border-sm" aria-hidden="true" /> Menyiapkan tes...
+          </>
+        ) : (
+          <>
+            Mulai Tes
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M5 12h14" />
+              <path d="M13 5l7 7-7 7" />
+            </svg>
+          </>
+        )}
       </button>
     </form>
   );

@@ -8,16 +8,19 @@ export default async function AdminLoginPage() {
   if (admin) redirect("/admin");
 
   return (
-    <main className="d-flex align-items-center justify-content-center" style={{ minHeight: "100vh" }}>
-      <div className="container" style={{ maxWidth: 380 }}>
+    <main
+      className="tp-hero d-flex align-items-center justify-content-center"
+      style={{ minHeight: "100vh", padding: "2rem 0" }}
+    >
+      <div className="container" style={{ maxWidth: 400 }}>
         <div className="text-center mb-4">
-          <div className="d-flex justify-content-center mb-2">
-            <ThunderMark size={52} id="login" />
+          <div className="d-flex justify-content-center mb-3 tp-logo-glow">
+            <ThunderMark size={60} id="login" />
           </div>
-          <div className="tp-brand fs-5">Thunder Test Center</div>
-          <div className="text-muted small">Admin Dashboard</div>
+          <div className="tp-brand fs-5">THUNDER TEST CENTER</div>
+          <div className="tp-eyebrow mt-1">Admin Dashboard</div>
         </div>
-        <div className="tp-card p-4">
+        <div className="tp-card p-4 text-start" style={{ color: "var(--tp-text)" }}>
           <AdminLoginForm />
         </div>
       </div>

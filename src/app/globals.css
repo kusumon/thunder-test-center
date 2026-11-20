@@ -1,21 +1,31 @@
 /* Bootstrap dimuat lewat <link> di RootLayout (src/app/layout.tsx) —
    Turbopack tidak mendukung @import root-relative ("/...") di CSS.
-   Font disediakan next/font sebagai --font-body / --font-heading. */
+   Font disediakan next/font sebagai --font-jakarta. */
 
 :root {
+  --font-body: var(--font-jakarta);
+  --font-heading: var(--font-jakarta);
+
+  --tp-navy: #0b1b3f;
+  --tp-navy-2: #12285c;
   --tp-blue-dark: #0f172a;
   --tp-blue: #2563eb;
+  --tp-blue-bright: #3b82f6;
+  --tp-cyan: #22d3ee;
   --tp-blue-light: #eff6ff;
-  --tp-orange: #ff6b00;
-  --tp-bg: #f1f5f9;
+  --tp-bg: #f4f7fc;
   --tp-text: #334155;
   --tp-text-muted: #64748b;
-  --tp-shadow: 0 5px 20px rgba(15, 23, 42, 0.08);
+  --tp-border: rgba(15, 23, 42, 0.08);
+  --tp-radius: 20px;
+  --tp-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 32px -14px rgba(15, 23, 42, 0.18);
+  --tp-grad: linear-gradient(135deg, #2563eb 0%, #3b82f6 55%, #22d3ee 130%);
+  --tp-glow: 0 10px 30px -10px rgba(37, 99, 235, 0.65);
 }
 
 html,
 body {
-  height: 100%;
+  min-height: 100%;
 }
 
 /* `html body` (bukan `body` saja) supaya specificity-nya di atas aturan
@@ -24,69 +34,29 @@ body {
    setelah file ini, sehingga font kustom kita kalah tanpa ini. */
 html body {
   font-family: var(--font-body), system-ui, sans-serif;
-  background: var(--tp-bg);
+  background-color: var(--tp-bg);
+  /* Dua pendar biru samar di pojok atas — memberi kedalaman tanpa gambar. */
+  background-image:
+    radial-gradient(900px 420px at 100% -10%, rgba(59, 130, 246, 0.10), transparent 60%),
+    radial-gradient(700px 380px at -10% 0%, rgba(34, 211, 238, 0.08), transparent 60%);
+  background-repeat: no-repeat;
   color: var(--tp-text);
+  letter-spacing: 0.01em;
+  -webkit-font-smoothing: antialiased;
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+/* Diawali `html body` supaya menang atas `h1..h6 { font-weight: 500 }`
+   Bootstrap yang dimuat setelah file ini. */
+html body :is(h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6) {
   font-family: var(--font-heading), system-ui, sans-serif;
   color: var(--tp-blue-dark);
-}
-
-.tp-brand {
-  font-family: var(--font-heading), system-ui, sans-serif;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.01em;
 }
 
-/* Baris kecil ber-spasi lebar di atas judul — nama lembaga. */
-.tp-eyebrow {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
+a {
   color: var(--tp-blue);
 }
-
-/* `.btn.tp-btn-primary` (dua kelas) supaya menang atas `.btn { color }`
-   bawaan Bootstrap — dengan satu kelas, teks tombol jadi abu-abu gelap di
-   atas biru karena bootstrap.min.css dimuat setelah file ini. */
-.btn.tp-btn-primary,
-.btn.tp-btn-primary:focus,
-.btn.tp-btn-primary:active {
-  background: linear-gradient(45deg, var(--tp-blue), #3b82f6);
-  border: none;
-  color: #fff;
-  font-weight: 600;
-}
-
-.btn.tp-btn-primary:hover {
-  color: #fff;
-  filter: brightness(1.05);
-  box-shadow: 0 0 15px rgba(37, 99, 235, 0.35);
-}
-
-.btn.tp-btn-primary:disabled {
-  color: #fff;
-  opacity: 0.6;
-}
-
-/* Bootstrap yang dipakai versi 5.1.3, sedangkan kelas `text-bg-*` baru ada
-   sejak 5.2. Tanpa definisi ini semua badge `text-bg-*` tampil teks putih
-   di atas latar transparan — tidak terlihat sama sekali (termasuk label
-   VALID/REVOKED di halaman verifikasi). */
-.text-bg-primary { color: #fff !important; background-color: var(--tp-blue) !important; }
-.text-bg-success { color: #fff !important; background-color: #198754 !important; }
-.text-bg-danger { color: #fff !important; background-color: #dc3545 !important; }
-.text-bg-secondary { color: #fff !important; background-color: #6c757d !important; }
-.text-bg-warning { color: #000 !important; background-color: #ffc107 !important; }
-.text-bg-light { color: #000 !important; background-color: #f8f9fa !important; }
 
 /* Kata panjang ("Comprehension") jangan sampai mendorong halaman melebar
    di layar HP. */
@@ -94,7 +64,271 @@ main {
   overflow-wrap: anywhere;
 }
 
-/* Langkah bernomor (cara kerja, alur sertifikat). */
+.tp-brand {
+  font-family: var(--font-heading), system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+/* Baris kecil ber-spasi lebar di atas judul. */
+.tp-eyebrow {
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--tp-blue);
+}
+
+.tp-text-gradient {
+  background: var(--tp-grad);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- Tombol ---------- */
+
+/* `.btn.tp-btn-primary` (dua kelas) supaya menang atas `.btn { color }`
+   bawaan Bootstrap — dengan satu kelas, teks tombol jadi abu-abu gelap di
+   atas biru karena bootstrap.min.css dimuat setelah file ini. */
+.btn.tp-btn-primary,
+.btn.tp-btn-primary:focus,
+.btn.tp-btn-primary:active {
+  background: var(--tp-grad);
+  background-size: 140% 100%;
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 14px;
+  box-shadow: var(--tp-glow);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-position 0.3s ease;
+}
+
+.btn.tp-btn-primary:hover {
+  color: #fff;
+  background-position: 100% 0;
+  transform: translateY(-1px);
+  box-shadow: 0 14px 34px -10px rgba(37, 99, 235, 0.75);
+}
+
+.btn.tp-btn-primary:disabled {
+  color: #fff;
+  opacity: 0.6;
+  transform: none;
+}
+
+/* Tombol sekunder bergaya "ghost" — lebih lembut dari outline Bootstrap. */
+.btn.tp-btn-ghost {
+  background: #fff;
+  border: 1.5px solid var(--tp-border);
+  color: var(--tp-blue-dark);
+  font-weight: 600;
+  border-radius: 14px;
+}
+
+.btn.tp-btn-ghost:hover {
+  border-color: var(--tp-blue);
+  color: var(--tp-blue);
+}
+
+.btn.tp-btn-success,
+.btn.tp-btn-success:focus {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  border-radius: 14px;
+  box-shadow: 0 10px 28px -12px rgba(22, 163, 74, 0.8);
+}
+
+.btn.tp-btn-success:hover {
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.btn-lg {
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  font-size: 1.05rem;
+}
+
+/* Bootstrap yang dipakai versi 5.1.3, sedangkan kelas `text-bg-*` baru ada
+   sejak 5.2. Tanpa definisi ini semua badge `text-bg-*` tampil teks putih
+   di atas latar transparan — tidak terlihat sama sekali. */
+.text-bg-primary { color: #fff !important; background-color: var(--tp-blue) !important; }
+.text-bg-success { color: #fff !important; background-color: #16a34a !important; }
+.text-bg-danger { color: #fff !important; background-color: #dc2626 !important; }
+.text-bg-secondary { color: #fff !important; background-color: #64748b !important; }
+.text-bg-warning { color: #000 !important; background-color: #fbbf24 !important; }
+.text-bg-light { color: var(--tp-blue-dark) !important; background-color: #fff !important; }
+
+/* Pil info kecil (jumlah soal, durasi). */
+.tp-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+  background: var(--tp-blue-light);
+  color: var(--tp-blue);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* ---------- Kartu & permukaan ---------- */
+
+.tp-card {
+  background: #fff;
+  border-radius: var(--tp-radius);
+  box-shadow: var(--tp-shadow);
+  border: 1px solid var(--tp-border);
+}
+
+.tp-card-accent {
+  position: relative;
+  overflow: hidden;
+}
+
+.tp-card-accent::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--tp-grad);
+}
+
+/* Kotak ikon bergradasi lembut di samping judul. */
+.tp-icon-chip {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tp-blue);
+  background: linear-gradient(135deg, #e0ecff, #ecfeff);
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12);
+}
+
+.tp-icon-chip.is-solid {
+  color: #fff;
+  background: var(--tp-grad);
+  box-shadow: var(--tp-glow);
+}
+
+.tp-icon-chip.is-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+}
+
+/* Kotak info bernada tenang (bukan alert merah/kuning yang menakutkan). */
+.tp-note {
+  background: linear-gradient(135deg, #eff6ff, #f0fdff);
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 16px;
+  padding: 1rem 1.1rem;
+}
+
+.tp-disclaimer {
+  display: flex;
+  gap: 0.6rem;
+  align-items: flex-start;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--tp-text-muted);
+  padding: 1rem 0 0;
+  border-top: 1px solid var(--tp-border);
+}
+
+/* ---------- Header situs & hero ---------- */
+
+.tp-site-header {
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--tp-border);
+}
+
+.tp-site-header a {
+  color: var(--tp-blue-dark);
+  text-decoration: none;
+}
+
+/* Hero gelap di beranda: gradasi navy, kisi halus, dan pendar biru. */
+.tp-hero {
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  background:
+    radial-gradient(600px 300px at 85% 10%, rgba(34, 211, 238, 0.28), transparent 60%),
+    radial-gradient(700px 360px at 10% 100%, rgba(59, 130, 246, 0.45), transparent 60%),
+    linear-gradient(160deg, var(--tp-navy) 0%, var(--tp-navy-2) 55%, #1d4ed8 120%);
+  padding: 3.5rem 0 7rem;
+}
+
+.tp-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+
+.tp-hero > * {
+  position: relative;
+}
+
+html body .tp-hero h1 {
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.tp-hero .tp-eyebrow {
+  color: var(--tp-cyan);
+}
+
+.tp-hero-lead {
+  color: rgba(226, 232, 240, 0.9);
+  font-size: 1.08rem;
+}
+
+.tp-hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e0f2fe;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.tp-logo-glow {
+  filter: drop-shadow(0 0 22px rgba(56, 189, 248, 0.55));
+}
+
+/* Konten utama yang "naik" menutupi bagian bawah hero. */
+.tp-overlap {
+  margin-top: -4.5rem;
+  position: relative;
+}
+
+/* ---------- Langkah bernomor ---------- */
+
 .tp-steps {
   list-style: none;
   padding: 0;
@@ -105,26 +339,43 @@ main {
 .tp-steps > li {
   counter-increment: tp-step;
   position: relative;
-  padding-left: 2.6rem;
+  padding-left: 2.8rem;
   min-height: 2rem;
-  margin-bottom: 0.9rem;
+  padding-bottom: 1.1rem;
 }
 
 .tp-steps > li:last-child {
-  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Garis penghubung antar-langkah. */
+.tp-steps > li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  left: 0.95rem;
+  top: 2rem;
+  bottom: 0.15rem;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.tp-steps > li.is-done:not(:last-child)::after {
+  background: #86efac;
 }
 
 .tp-steps > li::before {
   content: counter(tp-step);
   position: absolute;
   left: 0;
-  top: -0.1rem;
-  width: 1.9rem;
-  height: 1.9rem;
+  top: -0.15rem;
+  width: 1.95rem;
+  height: 1.95rem;
   border-radius: 50%;
-  background: var(--tp-blue-light);
-  color: var(--tp-blue);
+  background: #fff;
+  border: 2px solid #dbe4f0;
+  color: var(--tp-text-muted);
   font-weight: 700;
+  font-size: 0.85rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,50 +383,78 @@ main {
 
 .tp-steps > li.is-done::before {
   content: "✓";
-  background: #198754;
+  background: #16a34a;
+  border-color: #16a34a;
   color: #fff;
 }
 
 .tp-steps > li.is-current::before {
-  background: var(--tp-blue);
+  background: var(--tp-grad);
+  border-color: transparent;
   color: #fff;
+  box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.15);
 }
 
 .tp-steps > li.is-current {
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--tp-blue-dark);
 }
 
-/* Kotak info bernada tenang (bukan alert merah/kuning yang menakutkan). */
-.tp-note {
-  background: var(--tp-blue-light);
-  border: 1px solid rgba(37, 99, 235, 0.18);
-  border-radius: 12px;
-  padding: 0.9rem 1rem;
+.tp-steps > li.is-done {
+  color: var(--tp-text-muted);
+}
+
+/* ---------- Hasil / skor ---------- */
+
+.tp-score-ring {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+}
+
+.tp-score-ring svg {
+  transform: rotate(-90deg);
+}
+
+.tp-score-ring-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .tp-score-big {
-  font-family: var(--font-heading), system-ui, sans-serif;
-  font-size: 3.5rem;
-  font-weight: 700;
+  font-size: 3.4rem;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--tp-blue-dark);
+}
+
+.tp-level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
   color: var(--tp-blue);
-}
-
-.tp-card {
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: var(--tp-shadow);
-  border: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.tp-disclaimer {
-  font-size: 0.85rem;
-  color: var(--tp-text-muted);
   background: var(--tp-blue-light);
-  border: 1px solid rgba(37, 99, 235, 0.15);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.18);
 }
+
+.tp-mini-score {
+  border-radius: 16px;
+  background: #f8fafc;
+  border: 1px solid var(--tp-border);
+  padding: 0.9rem 0.5rem;
+}
+
+/* ---------- Halaman tes ---------- */
 
 /* Area soal aktif: cegah seleksi teks & drag sebagai penghambat, bukan DRM
    (FR-017/FR-020 — browser tidak bisa mencegah copy sepenuhnya). */
@@ -190,6 +469,134 @@ main {
   -webkit-user-drag: none;
 }
 
+.tp-testbar {
+  position: sticky;
+  top: 0;
+  z-index: 1020;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--tp-border);
+}
+
+/* Garis kemajuan tipis di bawah bilah atas (proporsi soal terjawab). */
+.tp-progress-line {
+  height: 3px;
+  background: #e2e8f0;
+}
+
+.tp-progress-line > span {
+  display: block;
+  height: 100%;
+  background: var(--tp-grad);
+  transition: width 0.3s ease;
+}
+
+.tp-timer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.8rem;
+  border-radius: 12px;
+  background: var(--tp-blue-light);
+  color: var(--tp-blue);
+  font-weight: 800;
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.tp-timer.is-warn {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.tp-timer.is-low {
+  background: #fee2e2;
+  color: #dc2626;
+  animation: tp-pulse 1s ease-in-out infinite;
+}
+
+@keyframes tp-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* Kartu pemutar audio Listening bergaya "player". */
+.tp-player {
+  border-radius: var(--tp-radius);
+  color: #fff;
+  background:
+    radial-gradient(400px 200px at 100% 0%, rgba(34, 211, 238, 0.3), transparent 60%),
+    linear-gradient(135deg, var(--tp-navy), #1e40af);
+  box-shadow: 0 18px 40px -18px rgba(11, 27, 63, 0.8);
+}
+
+.tp-play-btn {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tp-navy);
+  background: #fff;
+  box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.15);
+  transition: transform 0.15s ease;
+}
+
+.tp-play-btn:hover:not(:disabled) {
+  transform: scale(1.06);
+}
+
+.tp-play-btn:disabled {
+  opacity: 0.5;
+}
+
+/* Gelombang suara animasi saat audio diputar. */
+.tp-wave {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 22px;
+}
+
+.tp-wave > span {
+  width: 4px;
+  border-radius: 2px;
+  background: var(--tp-cyan);
+  animation: tp-wave 1s ease-in-out infinite;
+}
+
+.tp-wave > span:nth-child(2) { animation-delay: 0.15s; }
+.tp-wave > span:nth-child(3) { animation-delay: 0.3s; }
+.tp-wave > span:nth-child(4) { animation-delay: 0.45s; }
+.tp-wave > span:nth-child(5) { animation-delay: 0.6s; }
+
+@keyframes tp-wave {
+  0%, 100% { height: 5px; }
+  50% { height: 22px; }
+}
+
+.tp-plays {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.tp-plays > span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.tp-plays > span.is-left {
+  background: var(--tp-cyan);
+  box-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
+}
+
 .tp-nav-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
@@ -201,24 +608,45 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.8rem;
-  font-weight: 600;
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  font-weight: 700;
+  border: 1.5px solid #e2e8f0;
   background: #fff;
-  color: var(--tp-text);
+  color: var(--tp-text-muted);
   cursor: pointer;
+  transition: transform 0.1s ease;
 }
 
-.tp-nav-item.is-current {
-  outline: 2px solid var(--tp-blue);
-  outline-offset: 1px;
+.tp-nav-item:hover {
+  transform: translateY(-1px);
+  border-color: var(--tp-blue-bright);
 }
 
 .tp-nav-item.is-answered {
-  background: var(--tp-blue-light);
-  border-color: var(--tp-blue);
-  color: var(--tp-blue);
+  background: var(--tp-grad);
+  border-color: transparent;
+  color: #fff;
+}
+
+.tp-nav-item.is-current {
+  outline: 2.5px solid var(--tp-navy);
+  outline-offset: 2px;
+}
+
+.tp-legend-box {
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 4px;
+  vertical-align: -0.12em;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+}
+
+.tp-legend-box.is-answered {
+  background: var(--tp-grad);
+  border-color: transparent;
 }
 
 /* Pilihan jawaban: tombol penuh dengan bulatan huruf di kiri, supaya jelas
@@ -226,44 +654,54 @@ main {
 .tp-choice {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
   width: 100%;
   text-align: left;
-  border: 1.5px solid rgba(15, 23, 42, 0.14);
-  border-radius: 12px;
-  padding: 0.7rem 0.9rem;
-  margin-bottom: 0.55rem;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 0.8rem 1rem;
+  margin-bottom: 0.6rem;
   background: #fff;
   color: var(--tp-text);
+  font-weight: 500;
   cursor: pointer;
-  transition: border-color 0.12s, background-color 0.12s;
+  transition: border-color 0.12s, background-color 0.12s, box-shadow 0.12s, transform 0.12s;
 }
 
 .tp-choice:hover {
-  border-color: var(--tp-blue);
+  border-color: var(--tp-blue-bright);
+  box-shadow: 0 6px 18px -10px rgba(37, 99, 235, 0.5);
+}
+
+.tp-choice:active {
+  transform: scale(0.995);
 }
 
 .tp-choice-letter {
   flex-shrink: 0;
-  width: 2rem;
-  height: 2rem;
+  width: 2.1rem;
+  height: 2.1rem;
   border-radius: 50%;
-  border: 1.5px solid rgba(15, 23, 42, 0.2);
+  border: 1.5px solid #cbd5e1;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--tp-text-muted);
+  transition: all 0.12s;
 }
 
 .tp-choice.is-selected {
   border-color: var(--tp-blue);
-  background: var(--tp-blue-light);
+  background: linear-gradient(135deg, #eff6ff, #f0fdff);
   color: var(--tp-blue-dark);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
 }
 
 .tp-choice.is-selected .tp-choice-letter {
-  background: var(--tp-blue);
-  border-color: var(--tp-blue);
+  background: var(--tp-grad);
+  border-color: transparent;
   color: #fff;
 }
 
@@ -272,6 +710,13 @@ main {
 .tp-passage {
   max-height: 70vh;
   overflow-y: auto;
+  line-height: 1.8;
+}
+
+.tp-passage mark {
+  background: #fef08a;
+  border-radius: 4px;
+  padding: 0 2px;
 }
 
 @media (max-width: 991.98px) {
@@ -284,68 +729,80 @@ main {
 .tp-blank {
   display: inline-block;
   min-width: 4.5rem;
-  border-bottom: 2px solid var(--tp-blue-dark);
+  border-bottom: 2.5px solid var(--tp-blue);
   margin: 0 0.2rem;
 }
 
 /* Bagian bergaris bawah pada soal Error Recognition, diberi huruf A-D. */
 .tp-er-part {
   text-decoration: underline;
+  text-decoration-color: var(--tp-blue);
   text-decoration-thickness: 2px;
-  text-underline-offset: 4px;
+  text-underline-offset: 5px;
 }
 
 .tp-er-label {
-  font-size: 0.7em;
-  font-weight: 700;
+  font-size: 0.68em;
+  font-weight: 800;
   color: var(--tp-blue);
   vertical-align: sub;
   margin-left: 1px;
-}
-
-/* Legenda kotak nomor soal. */
-.tp-legend-box {
-  display: inline-block;
-  width: 0.9rem;
-  height: 0.9rem;
-  border-radius: 4px;
-  vertical-align: -0.12em;
-  border: 1px solid rgba(15, 23, 42, 0.2);
-  background: #fff;
-}
-
-.tp-legend-box.is-answered {
-  background: var(--tp-blue-light);
-  border-color: var(--tp-blue);
 }
 
 /* Dialog konfirmasi sederhana tanpa JS Bootstrap. */
 .tp-modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.55);
+  background: rgba(11, 27, 63, 0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
   z-index: 1080;
+  animation: tp-fade 0.15s ease;
 }
 
 .tp-modal {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 24px;
   max-width: 440px;
   width: 100%;
-  padding: 1.5rem;
-  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+  padding: 1.6rem;
+  box-shadow: 0 30px 70px -20px rgba(11, 27, 63, 0.5);
+  animation: tp-rise 0.2s ease;
 }
 
-.tp-timer {
-  font-family: var(--font-body), system-ui, sans-serif;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+@keyframes tp-fade {
+  from { opacity: 0; }
 }
 
-.tp-timer.is-low {
-  color: #dc2626;
+@keyframes tp-rise {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+}
+
+/* Masuk halus untuk kartu-kartu utama. */
+.tp-rise {
+  animation: tp-rise 0.35s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Input formulir yang lebih lembut. */
+.form-control {
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+}
+
+.form-control:focus {
+  border-color: var(--tp-blue-bright);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }

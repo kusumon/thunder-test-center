@@ -5,6 +5,8 @@ import { getOwnedAttempt, SECTION_ORDER, type SectionTypeValue } from "@/lib/att
 import { findSectionDefinition, findSectionSession, isSectionTimeUp } from "@/lib/sections";
 import { SECTION_INFO, formatMinutes } from "@/lib/sectionLabels";
 import { startSection } from "@/app/actions";
+import { SiteHeader } from "@/components/SiteHeader";
+import { LineIcon, SECTION_ICON } from "@/components/LineIcon";
 
 export default async function InstructionsPage({
   params,
@@ -43,77 +45,111 @@ export default async function InstructionsPage({
   const info = SECTION_INFO[target.type];
 
   return (
-    <main className="container py-5" style={{ maxWidth: 720 }}>
-      {/* Posisi peserta di antara 3 bagian — supaya jelas masih berapa lagi. */}
-      <div className="d-flex gap-2 mb-4">
-        {SECTION_ORDER.map((type, i) => (
-          <div key={type} className="flex-fill text-center">
-            <div
-              className={`rounded-pill mb-1 ${i <= currentIndex ? "bg-primary" : "bg-secondary bg-opacity-25"}`}
-              style={{ height: 6 }}
-            />
-            <div className={`small ${i === currentIndex ? "fw-semibold text-primary" : "text-muted"}`}>
-              {i < currentIndex ? "✓ " : ""}
-              {SECTION_INFO[type].short}
+    <>
+      <SiteHeader />
+      <main className="container py-4 py-md-5" style={{ maxWidth: 720 }}>
+        {/* Posisi peserta di antara 3 bagian — supaya jelas masih berapa lagi. */}
+        <div className="d-flex gap-2 mb-4">
+          {SECTION_ORDER.map((type, i) => {
+            const done = i < currentIndex;
+            const current = i === currentIndex;
+            return (
+              <div key={type} className="flex-fill">
+                <div
+                  className="rounded-pill mb-2"
+                  style={{
+                    height: 6,
+                    background: done ? "#16a34a" : current ? "var(--tp-grad)" : "#e2e8f0",
+                  }}
+                />
+                <div
+                  className={`small d-flex align-items-center gap-1 ${
+                    current ? "fw-bold text-primary" : done ? "text-success" : "text-muted"
+                  }`}
+                >
+                  {done && <LineIcon name="check" size={14} strokeWidth={3} />}
+                  {SECTION_INFO[type].short}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="tp-card tp-card-accent p-4 p-md-5 mb-4 tp-rise">
+          <div className="d-flex gap-3 align-items-center mb-3">
+            <div className="tp-icon-chip is-solid" style={{ width: 56, height: 56 }}>
+              <LineIcon name={SECTION_ICON[target.type]} size={26} />
+            </div>
+            <div>
+              <div className="tp-eyebrow">
+                Bagian {currentIndex + 1} dari {SECTION_ORDER.length}
+              </div>
+              <h1 className="h3 mb-0">{info.name}</h1>
             </div>
           </div>
-        ))}
-      </div>
+          <div className="d-flex flex-wrap gap-2 mb-4">
+            <span className="tp-pill">
+              <LineIcon name="book" size={14} /> {questionCount} soal
+            </span>
+            <span className="tp-pill">
+              <LineIcon name="clock" size={14} /> {formatMinutes(target.section.durationSeconds)}
+            </span>
+          </div>
 
-      <div className="mb-4">
-        <div className="small text-muted mb-1">
-          Bagian {currentIndex + 1} dari {SECTION_ORDER.length}
+          <h2 className="h6 text-uppercase text-muted" style={{ letterSpacing: "0.08em", fontSize: "0.75rem" }}>
+            Petunjuk
+          </h2>
+          <p className="mb-0" style={{ whiteSpace: "pre-line", lineHeight: 1.75 }}>
+            {target.section.instructions}
+          </p>
         </div>
-        <h1 className="h3 mb-2">{info.name}</h1>
-        <div className="d-flex flex-wrap gap-2">
-          <span className="badge rounded-pill text-bg-light border">{questionCount} soal</span>
-          <span className="badge rounded-pill text-bg-light border">
-            Waktu {formatMinutes(target.section.durationSeconds)}
+
+        {target.type === "LISTENING" && (
+          <div className="tp-card p-4 mb-4">
+            <div className="d-flex gap-3 align-items-center mb-3">
+              <div className="tp-icon-chip is-sm">
+                <LineIcon name="headphones" size={18} />
+              </div>
+              <h2 className="h6 mb-0">Cara mengerjakan bagian Listening</h2>
+            </div>
+            <ol className="tp-steps">
+              <li>Pakai headset atau nyalakan speaker, lalu atur volume.</li>
+              <li>
+                Tekan tombol <strong>Putar Audio</strong> di halaman soal. Satu audio panjang berisi
+                semua soal secara berurutan, mulai dari soal 1.
+              </li>
+              <li>
+                Sambil mendengarkan, pilih jawaban tiap soal lalu tekan <strong>Selanjutnya</strong>.
+              </li>
+            </ol>
+            <div className="small text-muted mt-3">
+              Audio bisa diputar <strong>maksimal {target.section.audioMaxPlays} kali</strong> dan
+              tidak bisa dijeda atau dimundurkan.
+            </div>
+          </div>
+        )}
+
+        <div className="tp-note mb-4 d-flex gap-2">
+          <LineIcon name="hourglass" size={20} className="text-primary" />
+          <span>
+            <strong>Waktu langsung berjalan</strong> setelah Anda menekan tombol di bawah. Jika waktu
+            habis, jawaban yang sudah diisi tetap tersimpan dan Anda dibawa ke bagian berikutnya.
           </span>
         </div>
-      </div>
 
-      <div className="tp-card p-4 mb-4">
-        <h2 className="h6">Petunjuk</h2>
-        <p className="mb-0" style={{ whiteSpace: "pre-line" }}>
-          {target.section.instructions}
+        <form action={startSection.bind(null, attemptCode, target.type)}>
+          <button
+            type="submit"
+            className="btn tp-btn-primary btn-lg w-100 d-flex align-items-center justify-content-center gap-2"
+          >
+            Mulai Bagian {info.short} <LineIcon name="arrowRight" size={20} />
+          </button>
+        </form>
+
+        <p className="small text-muted text-center mt-3 mb-0">
+          Materi tes dilindungi — dilarang menyalin, merekam, atau menyebarkannya.
         </p>
-      </div>
-
-      {target.type === "LISTENING" && (
-        <div className="tp-card p-4 mb-4">
-          <h2 className="h6">Cara mengerjakan bagian Listening</h2>
-          <ol className="tp-steps mt-3">
-            <li>Pakai headset atau nyalakan speaker, lalu atur volume.</li>
-            <li>
-              Tekan tombol <strong>Putar Audio</strong> di halaman soal. Satu audio panjang berisi
-              semua soal secara berurutan, mulai dari soal 1.
-            </li>
-            <li>
-              Sambil mendengarkan, pilih jawaban tiap soal lalu tekan <strong>Selanjutnya</strong>.
-            </li>
-          </ol>
-          <div className="small text-muted mt-3">
-            Audio bisa diputar <strong>maksimal {target.section.audioMaxPlays} kali</strong> dan
-            tidak bisa dijeda atau dimundurkan.
-          </div>
-        </div>
-      )}
-
-      <div className="tp-note mb-3">
-        <strong>Waktu langsung berjalan</strong> setelah Anda menekan tombol di bawah. Jika waktu
-        habis, jawaban yang sudah diisi tetap tersimpan dan Anda dibawa ke bagian berikutnya.
-      </div>
-
-      <form action={startSection.bind(null, attemptCode, target.type)}>
-        <button type="submit" className="btn tp-btn-primary btn-lg w-100">
-          Mulai Bagian {info.short}
-        </button>
-      </form>
-
-      <p className="small text-muted text-center mt-3 mb-0">
-        Materi tes dilindungi — dilarang menyalin, merekam, atau menyebarkannya.
-      </p>
-    </main>
+      </main>
+    </>
   );
 }
