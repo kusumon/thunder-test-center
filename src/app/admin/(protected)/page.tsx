@@ -1,266 +1,227 @@
 import Link from "next/link";
 import { prisma } from "@/lib/db";
 import { startOfTodayJakarta } from "@/lib/date";
-import { SECTION_ORDER, type SectionTypeValue } from "@/lib/attempts";
-import { Icon, type IconName } from "@/components/Icon";
+import { SECTION_ORDER } from "@/lib/attempts";
+import { SECTION_INFO } from "@/lib/sectionLabels";
+import { formatRupiah } from "@/lib/settings";
+import { ATTEMPT_STATUS, formatDateTime } from "@/lib/adminLabels";
+import { LineIcon, type LineIconName } from "@/components/LineIcon";
 
 async function getSummary() {
   const [
+    pendingOrders,
+    testsToday,
     totalAttempts,
     completedAttempts,
     scoreAgg,
     certificatesIssued,
-    testsToday,
-    recentAttempts,
-    statusGroups,
-    completionTimes,
+    revenue,
     sectionSubmissions,
+    recentAttempts,
   ] = await Promise.all([
+    prisma.certificateOrder.count({ where: { status: "MENUNGGU_KONFIRMASI" } }),
+    prisma.attempt.count({ where: { startedAt: { gte: startOfTodayJakarta() } } }),
     prisma.attempt.count(),
     prisma.attempt.count({ where: { status: "COMPLETED" } }),
-    prisma.attempt.aggregate({
-      where: { status: "COMPLETED" },
-      _avg: { overallScore: true },
-      _max: { overallScore: true },
-    }),
+    prisma.attempt.aggregate({ where: { status: "COMPLETED" }, _avg: { overallScore: true } }),
     prisma.certificate.count(),
-    prisma.attempt.count({ where: { startedAt: { gte: startOfTodayJakarta() } } }),
+    prisma.certificateOrder.aggregate({ where: { status: "DISETUJUI" }, _sum: { amount: true } }),
+    // Berapa peserta yang menuntaskan tiap bagian — untuk melihat di mana mereka berhenti.
+    prisma.attemptSectionSession.groupBy({
+      by: ["sectionId"],
+      where: { submittedAt: { not: null } },
+      _count: { _all: true },
+    }),
     prisma.attempt.findMany({
       orderBy: { startedAt: "desc" },
-      take: 8,
-      select: {
-        id: true,
-        publicCode: true,
-        participantNameSnapshot: true,
-        status: true,
-        overallScore: true,
-        startedAt: true,
-      },
-    }),
-    prisma.attempt.groupBy({ by: ["status"], _count: { _all: true } }),
-    prisma.attempt.findMany({
-      where: { status: "COMPLETED" },
-      select: { startedAt: true, completedAt: true },
-    }),
-    // Drop-off per bagian: berapa attempt yang berhasil MENYELESAIKAN
-    // masing-masing section (submittedAt terisi), digabung lintas semua
-    // paket aktif (§19 — paket bisa lebih dari satu, tipe section sama).
-    prisma.attemptSectionSession.findMany({
-      where: { submittedAt: { not: null } },
-      select: { section: { select: { type: true } } },
+      take: 6,
+      select: { id: true, participantNameSnapshot: true, status: true, overallScore: true, startedAt: true },
     }),
   ]);
 
-  const statusCounts = Object.fromEntries(statusGroups.map((g) => [g.status, g._count._all]));
-
-  const durationsMinutes = completionTimes
-    .filter((a): a is { startedAt: Date; completedAt: Date } => a.completedAt !== null)
-    .map((a) => (a.completedAt.getTime() - a.startedAt.getTime()) / 60000);
-  const avgDurationMinutes =
-    durationsMinutes.length > 0
-      ? durationsMinutes.reduce((sum, m) => sum + m, 0) / durationsMinutes.length
-      : null;
-
-  const dropoffCounts: Record<SectionTypeValue, number> = { LISTENING: 0, STRUCTURE: 0, READING: 0 };
+  // groupBy per sectionId → jumlahkan per tipe bagian (paket bisa lebih dari satu).
+  const sections = await prisma.section.findMany({
+    where: { id: { in: sectionSubmissions.map((s) => s.sectionId) } },
+    select: { id: true, type: true },
+  });
+  const typeById = new Map(sections.map((s) => [s.id, s.type]));
+  const finishedPerSection = { LISTENING: 0, STRUCTURE: 0, READING: 0 };
   for (const row of sectionSubmissions) {
-    dropoffCounts[row.section.type] += 1;
+    const type = typeById.get(row.sectionId);
+    if (type) finishedPerSection[type] += row._count._all;
   }
 
   return {
+    pendingOrders,
+    testsToday,
     totalAttempts,
     completedAttempts,
     averageScore: scoreAgg._avg.overallScore,
-    highestScore: scoreAgg._max.overallScore,
     certificatesIssued,
-    testsToday,
+    revenue: revenue._sum.amount ?? 0,
+    finishedPerSection,
     recentAttempts,
-    statusCounts,
-    avgDurationMinutes,
-    dropoffCounts,
   };
 }
 
-const CARD_ICON: Record<string, IconName> = {
-  totalAttempts: "people",
-  completedAttempts: "checkCircle",
-  averageScore: "graphUp",
-  highestScore: "trophy",
-  certificatesIssued: "patchCheck",
-  testsToday: "calendarCheck",
-};
-
-const SECTION_LABEL: Record<SectionTypeValue, string> = {
-  LISTENING: "Listening",
-  STRUCTURE: "Structure",
-  READING: "Reading",
-};
-
-export default async function AdminDashboardPage() {
-  const summary = await getSummary();
-
-  const cards = [
-    { key: "totalAttempts", label: "Total Attempts", value: summary.totalAttempts },
-    { key: "completedAttempts", label: "Completed Attempts", value: summary.completedAttempts },
-    {
-      key: "averageScore",
-      label: "Average Score",
-      value: summary.averageScore ? Math.round(summary.averageScore) : "—",
-    },
-    { key: "highestScore", label: "Highest Score", value: summary.highestScore ?? "—" },
-    { key: "certificatesIssued", label: "Certificates Issued", value: summary.certificatesIssued },
-    { key: "testsToday", label: "Tests Today", value: summary.testsToday },
-  ];
-
-  const completionRate =
-    summary.totalAttempts > 0 ? Math.round((summary.completedAttempts / summary.totalAttempts) * 100) : null;
-
+function Stat({ icon, value, label, sub }: { icon: LineIconName; value: string | number; label: string; sub?: string }) {
   return (
-    <div className="pagetitle mb-4">
-      <h1>Dashboard</h1>
-
-      <div className="row g-3 mt-1">
-        {cards.map((card) => (
-          <div className="col-md-4 col-xl-2" key={card.key}>
-            <div className="card">
-              <div className="card-body">
-                <h6 className="card-title text-muted small mb-1">{card.label}</h6>
-                <div className="d-flex align-items-center gap-2">
-                  <Icon name={CARD_ICON[card.key]} size={22} />
-                  <span className="fs-4 fw-bold">{card.value}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="row g-3 mt-1">
-        <div className="col-lg-6">
-          <div className="card h-100">
-            <div className="card-body">
-              <h5 className="card-title">Penyelesaian Tes</h5>
-              <div className="d-flex align-items-baseline gap-2 mb-3">
-                <span className="fs-3 fw-bold text-primary">
-                  {completionRate !== null ? `${completionRate}%` : "—"}
-                </span>
-                <span className="text-muted small">attempt yang berhasil sampai selesai</span>
-              </div>
-
-              <table className="table table-sm table-borderless mb-2">
-                <tbody>
-                  <tr>
-                    <td className="text-muted">Belum mulai bagian mana pun</td>
-                    <td className="text-end fw-semibold">{summary.statusCounts.CREATED ?? 0}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-muted">Sedang berjalan</td>
-                    <td className="text-end fw-semibold">{summary.statusCounts.IN_PROGRESS ?? 0}</td>
-                  </tr>
-                  <tr>
-                    <td className="text-muted">Selesai</td>
-                    <td className="text-end fw-semibold">{summary.statusCounts.COMPLETED ?? 0}</td>
-                  </tr>
-                </tbody>
-              </table>
-
-              <div className="small text-muted">
-                Rata-rata durasi pengerjaan (yang selesai):{" "}
-                <strong>
-                  {summary.avgDurationMinutes !== null
-                    ? `${Math.round(summary.avgDurationMinutes)} menit`
-                    : "—"}
-                </strong>
-              </div>
-            </div>
-          </div>
+    <div className="tp-card p-3 p-md-4 h-100">
+      <div className="adm-stat">
+        <div className="tp-icon-chip">
+          <LineIcon name={icon} />
         </div>
-
-        <div className="col-lg-6">
-          <div className="card h-100">
-            <div className="card-body">
-              <h5 className="card-title">Titik Berhenti Peserta</h5>
-              <p className="text-muted small">
-                Berapa attempt yang berhasil menyelesaikan tiap bagian — selisih besar antar bagian
-                menandakan di situ peserta paling sering berhenti.
-              </p>
-              {SECTION_ORDER.map((type) => {
-                const count = summary.dropoffCounts[type];
-                const pct = summary.totalAttempts > 0 ? (count / summary.totalAttempts) * 100 : 0;
-                return (
-                  <div key={type} className="mb-2">
-                    <div className="d-flex justify-content-between small mb-1">
-                      <span>{SECTION_LABEL[type]}</span>
-                      <span className="text-muted">{count} attempt</span>
-                    </div>
-                    <div className="progress" style={{ height: 6 }}>
-                      <div
-                        className="progress-bar"
-                        role="progressbar"
-                        style={{ width: `${pct}%` }}
-                        aria-valuenow={pct}
-                        aria-valuemin={0}
-                        aria-valuemax={100}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="card mt-3">
-        <div className="card-body">
-          <h5 className="card-title">Attempt Terbaru</h5>
-          <div className="table-responsive">
-            <table className="table table-borderless datatable">
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Attempt</th>
-                  <th>Tanggal</th>
-                  <th>Status</th>
-                  <th className="text-end">Skor</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.recentAttempts.map((attempt) => (
-                  <tr key={attempt.id}>
-                    <td>{attempt.participantNameSnapshot}</td>
-                    <td className="font-monospace small">
-                      <Link href={`/admin/results/${attempt.id}`}>{attempt.publicCode}</Link>
-                    </td>
-                    <td className="small">
-                      {new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short" }).format(
-                        attempt.startedAt,
-                      )}
-                    </td>
-                    <td>
-                      <span
-                        className={`badge ${attempt.status === "COMPLETED" ? "bg-success" : "bg-secondary"}`}
-                      >
-                        {attempt.status}
-                      </span>
-                    </td>
-                    <td className="text-end fw-semibold">{attempt.overallScore ?? "—"}</td>
-                  </tr>
-                ))}
-                {summary.recentAttempts.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="text-center text-muted py-4">
-                      Belum ada attempt.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-          <Link href="/admin/results" className="small">
-            Lihat semua hasil &rarr;
-          </Link>
+        <div style={{ minWidth: 0 }}>
+          <div className="adm-stat-value">{value}</div>
+          <div className="adm-stat-label">{label}</div>
+          {sub && <div className="small text-muted">{sub}</div>}
         </div>
       </div>
     </div>
+  );
+}
+
+const todayLabel = () =>
+  new Intl.DateTimeFormat("id-ID", { dateStyle: "full", timeZone: "Asia/Jakarta" }).format(new Date());
+
+export default async function AdminDashboardPage() {
+  const s = await getSummary();
+
+  const funnel = [
+    { label: "Mulai tes", count: s.totalAttempts },
+    ...SECTION_ORDER.map((type) => ({ label: `Selesai ${SECTION_INFO[type].short}`, count: s.finishedPerSection[type] })),
+    { label: "Kirim jawaban & dapat skor", count: s.completedAttempts },
+  ];
+
+  return (
+    <>
+      <div className="adm-head">
+        <div>
+          <h1>Ringkasan</h1>
+          <p>{todayLabel()}</p>
+        </div>
+      </div>
+
+      {/* Hal yang perlu ditindaklanjuti admin — paling atas. */}
+      {s.pendingOrders > 0 ? (
+        <Link
+          href="/admin/orders"
+          className="tp-card p-3 p-md-4 mb-4 d-flex align-items-center gap-3 text-decoration-none"
+          style={{ background: "linear-gradient(135deg, #fffbeb, #fef3c7)", borderColor: "#fcd34d" }}
+        >
+          <div className="tp-icon-chip" style={{ background: "#f59e0b", color: "#fff", boxShadow: "none" }}>
+            <LineIcon name="card" />
+          </div>
+          <div className="flex-grow-1">
+            <div className="fw-bold text-dark fs-5">{s.pendingOrders} pembayaran menunggu dicek</div>
+            <div className="small" style={{ color: "#92400e" }}>
+              Peserta sudah transfer dan menunggu sertifikatnya. Cocokkan dengan mutasi rekening Anda.
+            </div>
+          </div>
+          <span className="btn tp-btn-primary d-none d-sm-inline-flex align-items-center gap-2">
+            Cek sekarang <LineIcon name="arrowRight" size={18} />
+          </span>
+        </Link>
+      ) : (
+        <div className="tp-note mb-4 d-flex align-items-center gap-2">
+          <LineIcon name="check" size={18} className="text-success" strokeWidth={3} />
+          <span>Tidak ada pembayaran yang perlu dicek saat ini.</span>
+        </div>
+      )}
+
+      <div className="row g-3 mb-4">
+        <div className="col-6 col-xl-3">
+          <Stat icon="user" value={s.testsToday} label="Peserta hari ini" />
+        </div>
+        <div className="col-6 col-xl-3">
+          <Stat
+            icon="check"
+            value={s.completedAttempts}
+            label="Tes selesai"
+            sub={`dari ${s.totalAttempts} yang dimulai`}
+          />
+        </div>
+        <div className="col-6 col-xl-3">
+          <Stat
+            icon="chart"
+            value={s.averageScore ? Math.round(s.averageScore) : "—"}
+            label="Rata-rata skor"
+          />
+        </div>
+        <div className="col-6 col-xl-3">
+          <Stat
+            icon="award"
+            value={formatRupiah(s.revenue)}
+            label="Pemasukan sertifikat"
+            sub={`${s.certificatesIssued} sertifikat terbit`}
+          />
+        </div>
+      </div>
+
+      <div className="row g-3">
+        <div className="col-lg-5">
+          <div className="tp-card p-4 h-100">
+            <h2 className="h6 mb-1">Peserta sampai di mana?</h2>
+            <p className="small text-muted mb-3">
+              Selisih besar antar baris menandakan banyak peserta berhenti di tahap itu.
+            </p>
+            {funnel.map((step) => {
+              const pct = s.totalAttempts > 0 ? (step.count / s.totalAttempts) * 100 : 0;
+              return (
+                <div key={step.label} className="mb-3">
+                  <div className="d-flex justify-content-between small mb-1">
+                    <span className="fw-semibold text-dark">{step.label}</span>
+                    <span className="text-muted">
+                      {step.count} orang · {Math.round(pct)}%
+                    </span>
+                  </div>
+                  <div className="tp-progress-line rounded-pill overflow-hidden" style={{ height: 8 }}>
+                    <span style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="col-lg-7">
+          <div className="tp-card p-4 h-100">
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <h2 className="h6 mb-0">Peserta terbaru</h2>
+              <Link href="/admin/results" className="small fw-semibold text-decoration-none">
+                Lihat semua →
+              </Link>
+            </div>
+            <div className="table-responsive">
+              <table className="table adm-table">
+                <tbody>
+                  {s.recentAttempts.map((a) => (
+                    <tr key={a.id}>
+                      <td>
+                        <Link href={`/admin/results/${a.id}`} className="fw-semibold text-decoration-none">
+                          {a.participantNameSnapshot}
+                        </Link>
+                        <div className="small text-muted">{formatDateTime(a.startedAt)}</div>
+                      </td>
+                      <td>
+                        <span className={`badge rounded-pill ${ATTEMPT_STATUS[a.status]?.badge}`}>
+                          {ATTEMPT_STATUS[a.status]?.label ?? a.status}
+                        </span>
+                      </td>
+                      <td className="text-end fw-bold text-dark">{a.overallScore ?? "—"}</td>
+                    </tr>
+                  ))}
+                  {s.recentAttempts.length === 0 && (
+                    <tr>
+                      <td className="text-center text-muted py-4">Belum ada peserta.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
   );
 }

@@ -71,10 +71,17 @@ export async function getAudioSource(
   return { type: "redirect", url: data.signedUrl };
 }
 
-/** Dipakai skrip unggah admin — lihat scripts/upload-audio.ts. */
-export async function uploadAudioFile(packageCode: string, audioAssetKey: string, fileBuffer: Buffer) {
+export { isSupabaseConfigured };
+
+/**
+ * Tautan unggah sekali-pakai (berlaku 2 jam) supaya BROWSER admin mengirim
+ * file MP3 langsung ke Supabase. Sebelumnya file dikirim lewat server
+ * action, yang dibatasi 1 MB oleh Next.js (dan ~4,5 MB oleh Vercel) —
+ * audio Listening asli puluhan MB sehingga unggahan selalu gagal.
+ */
+export async function createAudioUploadUrl(packageCode: string, audioAssetKey: string) {
   if (!isSupabaseConfigured()) {
-    throw new Error("SUPABASE_URL / SUPABASE_SECRET_KEY belum diisi di .env.");
+    throw new Error("Penyimpanan audio (Supabase) belum diatur. Hubungi pengelola teknis.");
   }
   const bucket = process.env.SUPABASE_AUDIO_BUCKET || "toefl-audio";
   const client = supabaseClient();
@@ -82,14 +89,20 @@ export async function uploadAudioFile(packageCode: string, audioAssetKey: string
   const { data: buckets } = await client.storage.listBuckets();
   if (!buckets?.some((b) => b.name === bucket)) {
     const { error } = await client.storage.createBucket(bucket, { public: false });
-    if (error) throw new Error(`Gagal membuat bucket "${bucket}": ${error.message}`);
+    if (error) throw new Error(`Gagal menyiapkan penyimpanan audio: ${error.message}`);
   }
 
   const objectPath = `${slugifyPackageCode(packageCode)}/${audioAssetKey}`;
-  const { error } = await client.storage
-    .from(bucket)
-    .upload(objectPath, fileBuffer, { contentType: "audio/mpeg", upsert: true });
-  if (error) throw new Error(`Gagal unggah ${objectPath}: ${error.message}`);
+  const { data, error } = await client.storage.from(bucket).createSignedUploadUrl(objectPath, { upsert: true });
+  if (error || !data) throw new Error(`Gagal menyiapkan unggahan: ${error?.message ?? "unknown error"}`);
+  return data.signedUrl;
+}
 
-  return objectPath;
+/** Pastikan file benar-benar sudah ada di storage sebelum dipakai peserta. */
+export async function audioFileExists(packageCode: string, audioAssetKey: string): Promise<boolean> {
+  const bucket = process.env.SUPABASE_AUDIO_BUCKET || "toefl-audio";
+  const { data } = await supabaseClient()
+    .storage.from(bucket)
+    .list(slugifyPackageCode(packageCode), { search: audioAssetKey });
+  return Boolean(data?.some((f) => f.name === audioAssetKey));
 }

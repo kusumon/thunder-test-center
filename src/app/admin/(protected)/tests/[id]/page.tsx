@@ -1,18 +1,13 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/db";
-import {
-  updateSection,
-  updateTestPackageDetails,
-  updateConversionTable,
-  uploadListeningAudioAction,
-} from "@/app/admin/actions";
+import { updateSection, updateTestPackageDetails, updateConversionTable } from "@/app/admin/actions";
+import { isSupabaseConfigured } from "@/lib/audioStorage";
+import { SECTION_INFO } from "@/lib/sectionLabels";
 import type { SectionType } from "@/generated/prisma/client";
-
-const SECTION_LABEL: Record<SectionType, string> = {
-  LISTENING: "Listening Comprehension",
-  STRUCTURE: "Structure & Written Expression",
-  READING: "Reading Comprehension",
-};
+import { ActionForm } from "@/components/admin/ActionForm";
+import { AudioUploader } from "@/components/admin/AudioUploader";
+import { LineIcon, SECTION_ICON } from "@/components/LineIcon";
 
 export default async function AdminTestDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -22,14 +17,14 @@ export default async function AdminTestDetailPage({ params }: { params: Promise<
     include: {
       sections: {
         orderBy: { position: "asc" },
-        include: { _count: { select: { questions: true } } },
+        include: { _count: { select: { questions: { where: { isActive: true } } } } },
       },
       conversionRules: true,
     },
   });
   if (!testPackage) notFound();
 
-  const supabaseConfigured = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SECRET_KEY);
+  const storageReady = isSupabaseConfigured();
 
   const rulesBySection = new Map<SectionType, { rawScore: number; scaledScore: number }[]>();
   for (const rule of testPackage.conversionRules) {
@@ -39,168 +34,162 @@ export default async function AdminTestDetailPage({ params }: { params: Promise<
   }
 
   return (
-    <div className="pagetitle mb-4">
-      <h1>{testPackage.name}</h1>
-      <div className="text-muted small font-monospace mb-3">{testPackage.code}</div>
+    <>
+      <Link href="/admin/tests" className="small fw-semibold text-decoration-none d-inline-flex align-items-center gap-1 mb-3">
+        <LineIcon name="arrowLeft" size={14} /> Paket Soal
+      </Link>
 
-      <div className="card mb-3">
-        <div className="card-body">
-          <h5 className="card-title">Detail Paket</h5>
-          <form action={updateTestPackageDetails.bind(null, testPackage.id)}>
-            <div className="row g-3">
-              <div className="col-md-6">
-                <label className="form-label small">Nama Paket</label>
-                <input type="text" name="name" defaultValue={testPackage.name} className="form-control" required />
-              </div>
-              <div className="col-md-3">
-                <label className="form-label small">Skor Minimum Sertifikat</label>
-                <input
-                  type="number"
-                  name="certificateMinScore"
-                  defaultValue={testPackage.certificateMinScore ?? ""}
-                  placeholder="Kosongkan = tanpa batas"
-                  className="form-control"
-                />
-              </div>
-              <div className="col-12">
-                <label className="form-label small">Deskripsi</label>
-                <textarea
-                  name="description"
-                  defaultValue={testPackage.description ?? ""}
-                  className="form-control"
-                  rows={2}
-                />
-              </div>
-            </div>
-            <button type="submit" className="btn tp-btn-primary btn-sm mt-3">
-              Simpan
-            </button>
-          </form>
+      <div className="adm-head">
+        <div>
+          <h1>{testPackage.name}</h1>
+          <p>Perubahan berlaku untuk peserta yang memulai bagian tersebut setelah disimpan.</p>
         </div>
+        <span className={`badge rounded-pill fs-6 ${testPackage.isActive ? "text-bg-success" : "text-bg-secondary"}`}>
+          {testPackage.isActive ? "Aktif" : "Nonaktif"}
+        </span>
+      </div>
+
+      <div className="tp-card p-4 mb-4">
+        <h2 className="h6 mb-3">Info paket</h2>
+        <ActionForm action={updateTestPackageDetails.bind(null, testPackage.id)} submitLabel="Simpan info paket">
+          <div className="row g-3">
+            <div className="col-md-6">
+              <label className="form-label fw-semibold small" htmlFor="pkg-name">
+                Nama paket
+              </label>
+              <input id="pkg-name" type="text" name="name" defaultValue={testPackage.name} className="form-control" required />
+              <div className="form-text">Hanya terlihat oleh admin.</div>
+            </div>
+            <div className="col-md-6">
+              <label className="form-label fw-semibold small" htmlFor="pkg-min">
+                Skor minimum untuk boleh memesan sertifikat
+              </label>
+              <input
+                id="pkg-min"
+                type="number"
+                name="certificateMinScore"
+                defaultValue={testPackage.certificateMinScore ?? ""}
+                placeholder="Kosong = semua skor boleh"
+                className="form-control"
+              />
+              <div className="form-text">Kosongkan bila semua peserta boleh memesan sertifikat.</div>
+            </div>
+          </div>
+        </ActionForm>
       </div>
 
       {testPackage.sections.map((section) => {
+        const info = SECTION_INFO[section.type];
         const rules = (rulesBySection.get(section.type) ?? []).sort((a, b) => a.rawScore - b.rawScore);
-        const tableJson = JSON.stringify(
-          Object.fromEntries(rules.map((r) => [r.rawScore, r.scaledScore])),
-          null,
-          0,
-        );
+        const tableJson = JSON.stringify(Object.fromEntries(rules.map((r) => [r.rawScore, r.scaledScore])));
 
         return (
-          <div className="card mb-3" key={section.id}>
-            <div className="card-body">
-              <h5 className="card-title">
-                {SECTION_LABEL[section.type]} <span className="text-muted small">({section._count.questions} soal)</span>
-              </h5>
-
-              <form action={updateSection.bind(null, section.id)} className="mb-4">
-                <div className="row g-3">
-                  <div className="col-md-3">
-                    <label className="form-label small">Durasi (menit)</label>
-                    <input
-                      type="number"
-                      name="durationMinutes"
-                      defaultValue={section.durationSeconds / 60}
-                      step="0.5"
-                      min="1"
-                      className="form-control"
-                      required
-                    />
-                  </div>
-                  <div className="col-md-3">
-                    <label className="form-label small">Maks. pemutaran audio</label>
-                    <input
-                      type="number"
-                      name="audioMaxPlays"
-                      defaultValue={section.audioMaxPlays}
-                      min="1"
-                      step="1"
-                      className="form-control"
-                      required
-                      // readOnly, bukan disabled: input yang disabled tidak ikut
-                      // terkirim di FormData sehingga nilainya jadi NaN di server.
-                      readOnly={section.type !== "LISTENING"}
-                    />
-                    <div className="form-text">Hanya berlaku untuk Listening.</div>
-                  </div>
-                  <div className="col-md-3 d-flex align-items-start pt-4">
-                    <div className="form-check">
-                      <input
-                        type="checkbox"
-                        name="strictAudio"
-                        id={`strict-${section.id}`}
-                        defaultChecked={section.strictAudio}
-                        className="form-check-input"
-                      />
-                      <label className="form-check-label small" htmlFor={`strict-${section.id}`}>
-                        Mode ketat audio (tanpa seek/kendali kecepatan)
-                      </label>
-                    </div>
-                  </div>
-                  <div className="col-12">
-                    <label className="form-label small">Instruksi</label>
-                    <textarea
-                      name="instructions"
-                      defaultValue={section.instructions}
-                      className="form-control"
-                      rows={4}
-                      required
-                    />
-                  </div>
-                </div>
-                <button type="submit" className="btn tp-btn-primary btn-sm mt-3">
-                  Simpan Bagian
-                </button>
-              </form>
-
-              {section.type === "LISTENING" && (
-                <div className="mb-4 p-3 bg-light rounded">
-                  <h6 className="mb-2">Audio Listening</h6>
-                  <div className="small text-muted mb-2">
-                    File saat ini: <span className="font-monospace">{section.audioAssetKey ?? "belum diatur"}</span>
-                  </div>
-                  {supabaseConfigured ? (
-                    <form action={uploadListeningAudioAction.bind(null, section.id)} className="d-flex gap-2 align-items-center flex-wrap">
-                      <input type="file" name="audio" accept="audio/mpeg,.mp3" className="form-control form-control-sm" style={{ maxWidth: 320 }} required />
-                      <button type="submit" className="btn btn-outline-primary btn-sm">
-                        Unggah / Ganti Audio
-                      </button>
-                    </form>
-                  ) : (
-                    <div className="alert alert-warning small mb-0 py-2">
-                      Supabase Storage belum dikonfigurasi (SUPABASE_URL/SUPABASE_SECRET_KEY di
-                      .env). Untuk sekarang, kelola audio lewat{" "}
-                      <code>npx tsx scripts/upload-audio.ts {"<folder>"}</code> atau file lokal di{" "}
-                      <code>content/</code>.
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <details>
-                <summary className="small text-muted" style={{ cursor: "pointer" }}>
-                  Tabel konversi raw → scaled ({rules.length} baris) — klik untuk edit
-                </summary>
-                <form action={updateConversionTable.bind(null, testPackage.id, section.type)} className="mt-2">
-                  <textarea
-                    name="table"
-                    defaultValue={tableJson}
-                    className="form-control font-monospace small"
-                    rows={4}
-                  />
-                  <div className="form-text">
-                    Format JSON: <code>{'{"raw_score": scaled_score, ...}'}</code>. Menimpa seluruh tabel section ini.
-                  </div>
-                  <button type="submit" className="btn btn-outline-primary btn-sm mt-2">
-                    Simpan Tabel Konversi
-                  </button>
-                </form>
-              </details>
+          <div className="tp-card p-4 mb-4" key={section.id}>
+            <div className="d-flex align-items-center gap-3 mb-3">
+              <div className="tp-icon-chip">
+                <LineIcon name={SECTION_ICON[section.type]} />
+              </div>
+              <div>
+                <h2 className="h5 mb-0">{info.name}</h2>
+                <div className="small text-muted">{section._count.questions} soal</div>
+              </div>
             </div>
+
+            <ActionForm action={updateSection.bind(null, section.id)} submitLabel={`Simpan bagian ${info.short}`}>
+              <div className="row g-3">
+                <div className="col-6 col-md-3">
+                  <label className="form-label fw-semibold small" htmlFor={`dur-${section.id}`}>
+                    Waktu (menit)
+                  </label>
+                  <input
+                    id={`dur-${section.id}`}
+                    type="number"
+                    name="durationMinutes"
+                    defaultValue={section.durationSeconds / 60}
+                    step="0.5"
+                    min="1"
+                    className="form-control"
+                    required
+                  />
+                </div>
+                {section.type === "LISTENING" && (
+                  <div className="col-6 col-md-3">
+                    <label className="form-label fw-semibold small" htmlFor={`plays-${section.id}`}>
+                      Audio boleh diputar
+                    </label>
+                    <div className="input-group">
+                      <input
+                        id={`plays-${section.id}`}
+                        type="number"
+                        name="audioMaxPlays"
+                        defaultValue={section.audioMaxPlays}
+                        min="1"
+                        step="1"
+                        className="form-control"
+                        style={{ borderRadius: "14px 0 0 14px" }}
+                        required
+                      />
+                      <span className="input-group-text" style={{ borderRadius: "0 14px 14px 0" }}>
+                        kali
+                      </span>
+                    </div>
+                  </div>
+                )}
+                <div className="col-12">
+                  <label className="form-label fw-semibold small" htmlFor={`ins-${section.id}`}>
+                    Petunjuk untuk peserta
+                  </label>
+                  <textarea
+                    id={`ins-${section.id}`}
+                    name="instructions"
+                    defaultValue={section.instructions}
+                    className="form-control"
+                    rows={5}
+                    required
+                  />
+                  <div className="form-text">Ditampilkan sebelum peserta menekan tombol mulai bagian ini.</div>
+                </div>
+              </div>
+            </ActionForm>
+
+            {section.type === "LISTENING" && (
+              <div className="tp-note mt-4">
+                <div className="fw-bold text-dark mb-1">Audio Listening</div>
+                <div className="small text-muted mb-3">
+                  File yang dipakai sekarang:{" "}
+                  <span className="font-monospace text-dark">{section.audioAssetKey ?? "belum ada"}</span>
+                </div>
+                {storageReady ? (
+                  <AudioUploader sectionId={section.id} />
+                ) : (
+                  <div className="small text-danger">
+                    Penyimpanan audio belum diatur, jadi audio belum bisa diganti dari sini. Hubungi pengelola teknis.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <details className="mt-4">
+              <summary className="small fw-semibold text-muted" style={{ cursor: "pointer" }}>
+                Lanjutan: tabel konversi skor (jarang perlu diubah)
+              </summary>
+              <p className="small text-muted mt-2 mb-2">
+                Mengubah jumlah jawaban benar menjadi skor {info.short}. Formatnya{" "}
+                <code>{'{"jumlah_benar": skor}'}</code>, misalnya <code>{'{"0": 24, "1": 25}'}</code>. Salah ketik di sini
+                akan memengaruhi skor peserta berikutnya — ubah hanya bila Anda yakin.
+              </p>
+              <ActionForm
+                action={updateConversionTable.bind(null, testPackage.id, section.type)}
+                submitLabel="Simpan tabel konversi"
+                submitClassName="btn tp-btn-ghost"
+                confirmText={`Ganti seluruh tabel konversi ${info.short}? Skor peserta berikutnya dihitung dengan tabel baru.`}
+              >
+                <textarea name="table" defaultValue={tableJson} className="form-control font-monospace small" rows={4} />
+              </ActionForm>
+            </details>
           </div>
         );
       })}
-    </div>
+    </>
   );
 }

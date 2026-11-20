@@ -19,15 +19,6 @@ export const SETTING_DEFAULTS = {
 
 export type SettingKey = keyof typeof SETTING_DEFAULTS;
 
-export const SETTING_LABELS: Record<SettingKey, string> = {
-  certificate_price: "Harga sertifikat (Rp)",
-  bank_name: "Nama bank",
-  bank_account_number: "Nomor rekening",
-  bank_account_holder: "Atas nama",
-  admin_whatsapp: "Nomor WhatsApp admin (format 62…)",
-  payment_confirmation_sla: "Janji waktu konfirmasi",
-};
-
 export type Settings = Record<SettingKey, string>;
 
 export async function getSettings(): Promise<Settings> {
