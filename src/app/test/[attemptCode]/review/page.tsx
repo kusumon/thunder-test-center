@@ -1,16 +1,10 @@
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getParticipantSession } from "@/lib/session";
-import { getOwnedAttempt, SECTION_ORDER, type SectionTypeValue } from "@/lib/attempts";
+import { getOwnedAttempt, SECTION_ORDER } from "@/lib/attempts";
 import { findSectionDefinition, findSectionSession, isSectionTimeUp } from "@/lib/sections";
+import { SECTION_INFO } from "@/lib/sectionLabels";
 import { finalSubmit } from "@/app/actions";
-import { Disclaimer } from "@/components/Disclaimer";
-
-const SECTION_LABEL: Record<SectionTypeValue, string> = {
-  LISTENING: "Listening Comprehension",
-  STRUCTURE: "Structure & Written Expression",
-  READING: "Reading Comprehension",
-};
 
 export default async function ReviewPage({ params }: { params: Promise<{ attemptCode: string }> }) {
   const { attemptCode } = await params;
@@ -37,36 +31,34 @@ export default async function ReviewPage({ params }: { params: Promise<{ attempt
   );
 
   return (
-    <main className="container py-5" style={{ maxWidth: 640 }}>
-      <h1 className="h3 mb-1">Konfirmasi Akhir</h1>
-      <p className="text-muted">
-        Periksa ringkasan jawaban Anda. Setelah dikirim, attempt ini tidak dapat diubah lagi (FR-011).
-      </p>
+    <main className="container py-5" style={{ maxWidth: 560 }}>
+      <div className="text-center mb-4">
+        <h1 className="h3 mb-2">Semua bagian sudah selesai</h1>
+        <p className="text-muted mb-0">Satu langkah lagi: kirim jawaban Anda untuk melihat skor.</p>
+      </div>
 
       <div className="tp-card p-4 mb-4">
-        <table className="table mb-0">
-          <tbody>
-            {rows.map((row) => (
-              <tr key={row.type}>
-                <td>{SECTION_LABEL[row.type]}</td>
-                <td className="text-end fw-semibold">
-                  {row.answered}/{row.total} terjawab
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <h2 className="h6 mb-3">Ringkasan jawaban</h2>
+        <ul className="list-unstyled mb-0">
+          {rows.map((row) => (
+            <li key={row.type} className="d-flex justify-content-between py-2 border-bottom">
+              <span>{SECTION_INFO[row.type].short}</span>
+              <span className="fw-semibold">
+                {row.answered} dari {row.total} soal dijawab
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       <form action={finalSubmit.bind(null, attemptCode)}>
         <button type="submit" className="btn tp-btn-primary btn-lg w-100">
-          Kirim Tes
+          Kirim Jawaban &amp; Lihat Skor
         </button>
       </form>
-
-      <div className="mt-4">
-        <Disclaimer />
-      </div>
+      <p className="small text-muted text-center mt-3 mb-0">
+        Setelah dikirim, jawaban tidak bisa diubah lagi.
+      </p>
     </main>
   );
 }

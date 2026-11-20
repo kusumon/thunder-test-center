@@ -3,17 +3,9 @@ import Script from "next/script";
 import { redirect } from "next/navigation";
 import { getAdminSession } from "@/lib/adminSession";
 import { adminLogout } from "@/app/admin/actions";
-import { Icon, type IconName } from "@/components/Icon";
+import { Icon } from "@/components/Icon";
 import { ThunderMark } from "@/components/Brand";
-
-const NAV_ITEMS: { href: string; label: string; icon: IconName }[] = [
-  { href: "/admin", label: "Dashboard", icon: "speedometer" },
-  { href: "/admin/results", label: "Hasil Tes", icon: "clipboard" },
-  { href: "/admin/orders", label: "Pembayaran", icon: "checkCircle" },
-  { href: "/admin/certificates", label: "Sertifikat", icon: "patchCheck" },
-  { href: "/admin/tests", label: "Paket Tes", icon: "collection" },
-  { href: "/admin/settings", label: "Pengaturan", icon: "gear" },
-];
+import { AdminNav } from "@/components/AdminNav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await getAdminSession();
@@ -56,16 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       <aside id="sidebar" className="sidebar">
-        <ul className="sidebar-nav" id="sidebar-nav">
-          {NAV_ITEMS.map((item) => (
-            <li className="nav-item" key={item.href}>
-              <Link className="nav-link d-flex align-items-center gap-2" href={item.href}>
-                <Icon name={item.icon} size={18} />
-                <span>{item.label}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <AdminNav />
       </aside>
 
       <main id="main" className="main">
@@ -74,9 +57,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       <footer id="footer" className="footer">
         <div className="copyright">
-          &copy; TOEFL Prediction Test — <strong>Dashboard Admin</strong>
+          &copy; Thunder Test Center — <strong>Dashboard Admin</strong>
         </div>
-        <div className="credits">Prediction/simulation platform. Bukan layanan resmi ETS.</div>
+        <div className="credits">Tes prediksi/simulasi. Bukan layanan resmi ETS.</div>
       </footer>
 
       <Script src="/niceadmin/js/main.js" strategy="afterInteractive" />

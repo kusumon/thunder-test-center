@@ -190,7 +190,7 @@ export default async function AdminTestDetailPage({ params }: { params: Promise<
                     rows={4}
                   />
                   <div className="form-text">
-                    Format JSON: {"{"}"raw_score": scaled_score, ...{"}"}. Menimpa seluruh tabel section ini.
+                    Format JSON: <code>{'{"raw_score": scaled_score, ...}'}</code>. Menimpa seluruh tabel section ini.
                   </div>
                   <button type="submit" className="btn btn-outline-primary btn-sm mt-2">
                     Simpan Tabel Konversi

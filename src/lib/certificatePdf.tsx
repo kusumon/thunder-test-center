@@ -66,7 +66,6 @@ const NAVY = "#1e3a8a";
 const BLUE = "#2563eb";
 const BLUE_BRIGHT = "#3b82f6";
 const CYAN = "#22d3ee";
-const BLUE_TINT = "#eff6ff";
 const BLUE_LINE = "#dbeafe";
 const GRAY = "#64748b";
 const WHITE = "#ffffff";

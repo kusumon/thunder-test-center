@@ -27,6 +27,11 @@ export async function GET(
 
   const certificate = await getCertificateWithAttempt(certificateNumber);
   if (!certificate) return new Response("Not found", { status: 404 });
+  // Sertifikat yang dicabut admin tidak boleh diunduh ulang — halaman
+  // verifikasi publik sudah menampilkan REVOKED, PDF baru jangan beredar.
+  if (certificate.status !== "VALID") {
+    return new Response("Sertifikat ini sudah dicabut.", { status: 403 });
+  }
 
   const { attempt } = certificate;
   if (

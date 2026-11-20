@@ -15,17 +15,24 @@ export function StartTestForm({ defaultName }: { defaultName: string }) {
         id="name"
         name="name"
         type="text"
-        className={`form-control form-control-lg mb-2 ${state?.error ? "is-invalid" : ""}`}
-        placeholder="Tulis nama lengkap Anda"
+        className={`form-control form-control-lg mb-1 ${state?.error ? "is-invalid" : ""}`}
+        placeholder="Contoh: Budi Santoso"
         defaultValue={defaultName}
         minLength={2}
         maxLength={120}
         required
         autoComplete="name"
+        aria-describedby="name-help"
       />
-      {state?.error && <div className="text-danger small mb-3">{state.error}</div>}
+      {state?.error ? (
+        <div className="text-danger small mb-2">{state.error}</div>
+      ) : (
+        <div id="name-help" className="form-text mb-2">
+          Nama ini akan tercetak di sertifikat, jadi pastikan ejaannya benar.
+        </div>
+      )}
       <button type="submit" className="btn tp-btn-primary btn-lg w-100 mt-2" disabled={pending}>
-        {pending ? "Memulai..." : "Mulai Tes"}
+        {pending ? "Menyiapkan tes..." : "Mulai Tes"}
       </button>
     </form>
   );

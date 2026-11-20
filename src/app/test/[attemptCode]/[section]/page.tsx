@@ -1,6 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 import { getParticipantSession } from "@/lib/session";
-import { getOwnedAttempt, SECTION_ORDER, type SectionTypeValue } from "@/lib/attempts";
+import { getOwnedAttempt, type SectionTypeValue } from "@/lib/attempts";
 import {
   findSectionDefinition,
   findSectionSession,

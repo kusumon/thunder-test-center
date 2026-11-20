@@ -1,16 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { saveAnswerAction, submitSection, requestAudioPlay } from "@/app/actions";
 import { Icon } from "@/components/Icon";
+import { SECTION_INFO } from "@/lib/sectionLabels";
 import type { SectionTypeValue } from "@/lib/attempts";
 import type { PublicPassage, PublicQuestion } from "@/lib/sections";
 
-type SaveStatus = "idle" | "saving" | "saved" | "error";
+type SaveStatus = "idle" | "saving" | "saved" | "retrying" | "failed";
+type AudioState = "idle" | "requesting" | "playing" | "ended" | "error";
 
 type OrderedQuestion = PublicQuestion & {
   passage?: { id: string; title: string | null; body: string } | null;
 };
+
+/** Stem bawaan bank soal Listening — tidak informatif, diganti petunjuk berbahasa Indonesia. */
+const GENERIC_LISTENING_STEM = "Choose the best answer based on the audio.";
+
+const MAX_SAVE_RETRIES = 5;
 
 function buildOrderedQuestions(
   questions: PublicQuestion[],
@@ -24,6 +31,10 @@ function buildOrderedQuestions(
   return questions.map((q) => ({ ...q, passage: null }));
 }
 
+function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** Ambil kata yang dikutip dari stem, mis. `The word "lies" in line 2 ...` -> "lies". */
 function extractHighlightTerm(stem: string): string | null {
   const match = /"([^"]{2,})"/.exec(stem);
@@ -32,15 +43,83 @@ function extractHighlightTerm(stem: string): string | null {
 
 function highlightPassage(body: string, term: string | null) {
   if (!term) return body;
-  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  const parts = body.split(new RegExp(`(${escaped})`, "i"));
+  const parts = body.split(new RegExp(`(${escapeRegExp(term)})`, "i"));
   return parts.map((part, i) =>
-    part.toLowerCase() === term.toLowerCase() ? (
-      <mark key={i}>{part}</mark>
+    part.toLowerCase() === term.toLowerCase() ? <mark key={i}>{part}</mark> : <span key={i}>{part}</span>,
+  );
+}
+
+/** Ganti deretan titik/elipsis ("……." / "....") di soal isian menjadi garis kosong yang jelas. */
+function renderBlankStem(stem: string): ReactNode {
+  const parts = stem.split(/(\s*(?:[.…]*…[.…]*|\.{4,}|_{3,})\s*)/);
+  if (parts.length === 1) return stem;
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <span key={i}>
+        {" "}
+        <span className="tp-blank" aria-label="bagian kosong" />{" "}
+      </span>
     ) : (
       <span key={i}>{part}</span>
     ),
   );
+}
+
+/**
+ * Soal Error Recognition: garis bawahi keempat bagian kalimat yang menjadi
+ * pilihan, lengkap dengan huruf A-D-nya — seperti di lembar soal kertas.
+ * Pilihan jenis ini tidak diacak (lib/sections.ts), jadi huruf posisi = kunci.
+ * Kalau ada bagian yang tidak ketemu di kalimat, tampilkan kalimat apa adanya.
+ */
+function renderErrorRecognitionStem(stem: string, choiceTexts: string[]): ReactNode {
+  const ranges: { start: number; end: number; label: string }[] = [];
+  const overlaps = (start: number, end: number) => ranges.some((r) => start < r.end && end > r.start);
+
+  let cursor = 0;
+  for (let i = 0; i < choiceTexts.length; i++) {
+    const pattern = new RegExp(`\\b${escapeRegExp(choiceTexts[i].trim())}\\b`, "gi");
+    let found: { start: number; end: number } | null = null;
+    // Coba cari setelah bagian sebelumnya dulu (urutan wajar), lalu dari awal kalimat.
+    for (const from of [cursor, 0]) {
+      pattern.lastIndex = from;
+      let m: RegExpExecArray | null;
+      while ((m = pattern.exec(stem))) {
+        if (!overlaps(m.index, m.index + m[0].length)) {
+          found = { start: m.index, end: m.index + m[0].length };
+          break;
+        }
+      }
+      if (found) break;
+    }
+    if (!found) return stem;
+    ranges.push({ ...found, label: String.fromCharCode(65 + i) });
+    cursor = found.end;
+  }
+
+  ranges.sort((a, b) => a.start - b.start);
+  const out: ReactNode[] = [];
+  let pos = 0;
+  for (const r of ranges) {
+    if (r.start > pos) out.push(<span key={`t${pos}`}>{stem.slice(pos, r.start)}</span>);
+    out.push(
+      <span key={`p${r.start}`}>
+        <span className="tp-er-part">{stem.slice(r.start, r.end)}</span>
+        <span className="tp-er-label">{r.label}</span>
+      </span>,
+    );
+    pos = r.end;
+  }
+  if (pos < stem.length) out.push(<span key={`t${pos}`}>{stem.slice(pos)}</span>);
+  return out;
+}
+
+function questionHint(sectionType: SectionTypeValue, question: PublicQuestion): string {
+  if (question.questionType === "ERROR_RECOGNITION") {
+    return "Pilih bagian bergaris bawah yang SALAH (yang harus diperbaiki).";
+  }
+  if (sectionType === "STRUCTURE") return "Pilih jawaban yang tepat untuk mengisi bagian kosong.";
+  if (sectionType === "READING") return "Baca bacaannya, lalu pilih jawaban yang paling tepat.";
+  return "Dengarkan audio, lalu pilih jawaban yang paling tepat.";
 }
 
 function formatTime(totalSeconds: number) {
@@ -51,12 +130,6 @@ function formatTime(totalSeconds: number) {
   const ss = (s % 60).toString().padStart(2, "0");
   return `${mm}:${ss}`;
 }
-
-const SECTION_LABEL: Record<SectionTypeValue, string> = {
-  LISTENING: "Listening Comprehension",
-  STRUCTURE: "Structure & Written Expression",
-  READING: "Reading Comprehension",
-};
 
 export function SectionRunner({
   attemptCode,
@@ -83,24 +156,44 @@ export function SectionRunner({
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [remaining, setRemaining] = useState(() => (new Date(endsAt).getTime() - Date.now()) / 1000);
   const [playsLeft, setPlaysLeft] = useState(audioPlaysLeft);
-  const [audioState, setAudioState] = useState<"idle" | "requesting" | "playing" | "ended">("idle");
+  const [audioState, setAudioState] = useState<AudioState>("idle");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [submitting, setSubmitting] = useState<null | "manual" | "timeup">(null);
+  const [submitError, setSubmitError] = useState(false);
   const submittedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const questionTopRef = useRef<HTMLDivElement | null>(null);
+  // Pilihan terbaru per soal — retry yang tertunda dibatalkan bila peserta
+  // sudah mengganti jawabannya, supaya jawaban lama tidak menimpa yang baru.
+  const latestChoiceRef = useRef<Record<string, string>>({});
 
   const current = ordered[index];
+  const info = SECTION_INFO[sectionType];
 
-  const doSubmit = useCallback(() => {
-    if (submittedRef.current) return;
-    submittedRef.current = true;
-    void submitSection(attemptCode, sectionType);
-  }, [attemptCode, sectionType]);
+  const doSubmit = useCallback(
+    async (reason: "manual" | "timeup") => {
+      if (submittedRef.current) return;
+      submittedRef.current = true;
+      setConfirmOpen(false);
+      setSubmitError(false);
+      setSubmitting(reason);
+      try {
+        await submitSection(attemptCode, sectionType);
+      } catch {
+        // Gagal (mis. internet putus) — izinkan coba lagi alih-alih macet.
+        submittedRef.current = false;
+        setSubmitError(true);
+      }
+    },
+    [attemptCode, sectionType],
+  );
 
   // Timer — hanya representasi visual; server memutuskan kapan waktu benar-benar habis (FR-010).
   useEffect(() => {
     const id = setInterval(() => {
       const left = (new Date(endsAt).getTime() - Date.now()) / 1000;
       setRemaining(left);
-      if (left <= 0) doSubmit();
+      if (left <= 0) void doSubmit("timeup");
     }, 1000);
     return () => clearInterval(id);
   }, [endsAt, doSubmit]);
@@ -121,15 +214,34 @@ export function SectionRunner({
     };
   }, []);
 
-  async function selectChoice(questionId: string, choiceKey: string) {
-    setAnswers((prev) => ({ ...prev, [questionId]: choiceKey }));
-    setSaveStatus("saving");
+  async function persistAnswer(questionId: string, choiceKey: string, attempt = 0): Promise<void> {
     try {
       await saveAnswerAction(attemptCode, questionId, choiceKey);
-      setSaveStatus("saved");
+      if (latestChoiceRef.current[questionId] === choiceKey) setSaveStatus("saved");
     } catch {
-      setSaveStatus("error");
+      if (latestChoiceRef.current[questionId] !== choiceKey) return; // sudah diganti, abaikan
+      if (attempt >= MAX_SAVE_RETRIES) {
+        setSaveStatus("failed");
+        return;
+      }
+      setSaveStatus("retrying");
+      await new Promise((r) => setTimeout(r, 1500 * (attempt + 1)));
+      if (latestChoiceRef.current[questionId] !== choiceKey) return;
+      return persistAnswer(questionId, choiceKey, attempt + 1);
     }
+  }
+
+  function selectChoice(questionId: string, choiceKey: string) {
+    latestChoiceRef.current[questionId] = choiceKey;
+    setAnswers((prev) => ({ ...prev, [questionId]: choiceKey }));
+    setSaveStatus("saving");
+    void persistAnswer(questionId, choiceKey);
+  }
+
+  function goTo(i: number) {
+    setIndex(Math.max(0, Math.min(ordered.length - 1, i)));
+    // Di HP, pindah soal harus membawa layar kembali ke atas soal.
+    requestAnimationFrame(() => questionTopRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }));
   }
 
   /**
@@ -153,59 +265,120 @@ export function SectionRunner({
         setAudioState("playing");
       }
     } catch {
-      setAudioState("idle");
+      setAudioState("error");
     }
   }
 
-  const answeredCount = Object.keys(answers).length;
+  const answeredCount = ordered.filter((q) => answers[q.id]).length;
+  const unanswered = ordered.filter((q) => !answers[q.id]);
   const isLastQuestion = index === ordered.length - 1;
-  const lowTime = remaining <= 60;
+  const lowTime = remaining <= 300;
+  const veryLowTime = remaining <= 60;
 
   if (!current) return null;
 
+  const stemIsGeneric = sectionType === "LISTENING" && current.stem.trim() === GENERIC_LISTENING_STEM;
+  const stemContent =
+    current.questionType === "ERROR_RECOGNITION"
+      ? renderErrorRecognitionStem(
+          current.stem,
+          current.choices.map((c) => c.text),
+        )
+      : sectionType === "STRUCTURE"
+        ? renderBlankStem(current.stem)
+        : current.stem;
+
   return (
     <div>
-      <div className="d-flex justify-content-between align-items-center bg-white border-bottom px-3 py-2 sticky-top">
-        <div className="small text-muted">
-          {SECTION_LABEL[sectionType]} · Soal {index + 1} dari {ordered.length} · {answeredCount} terjawab
+      {/* Bilah atas: selalu terlihat, berisi posisi soal dan sisa waktu. */}
+      <div className="bg-white border-bottom sticky-top" style={{ zIndex: 1020 }}>
+        <div className="container d-flex justify-content-between align-items-center py-2 gap-2">
+          <div className="lh-sm">
+            <div className="fw-semibold">{info.short}</div>
+            <div className="small text-muted">
+              Soal {index + 1}/{ordered.length} · Terjawab {answeredCount}/{ordered.length}
+            </div>
+          </div>
+          <div className="text-end lh-sm">
+            <div className="small text-muted">Sisa waktu</div>
+            <div className={`tp-timer fs-4 ${veryLowTime ? "is-low" : lowTime ? "text-warning" : "text-primary"}`}>
+              {formatTime(remaining)}
+            </div>
+          </div>
         </div>
-        <div className={`tp-timer fs-5 ${lowTime ? "is-low" : "text-primary"}`}>{formatTime(remaining)}</div>
+        {lowTime && remaining > 0 && (
+          <div className="text-center small py-1 px-2" style={{ background: "#fff3cd" }}>
+            Waktu tinggal sedikit. Jawaban yang sudah dipilih tersimpan otomatis.
+          </div>
+        )}
       </div>
 
       <div className="container py-4">
         {sectionType === "LISTENING" && (
-          <div className="tp-card p-3 mb-4 d-flex align-items-center gap-3 flex-wrap">
-            {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-            <audio ref={audioRef} onEnded={() => setAudioState("ended")} style={{ display: "none" }} />
+          <div className="tp-card p-3 mb-4">
+            <audio
+              ref={audioRef}
+              onEnded={() => setAudioState("ended")}
+              onError={() => audioState === "playing" && setAudioState("error")}
+              style={{ display: "none" }}
+            />
 
-            {audioState === "playing" ? (
-              <span className="text-muted small">Audio sedang diputar — jangan tutup halaman ini.</span>
-            ) : playsLeft > 0 ? (
-              <button
-                type="button"
-                className="btn tp-btn-primary"
-                onClick={playAudio}
-                disabled={audioState === "requesting"}
-              >
-                <Icon name="play" />{" "}
-                {audioState === "ended" ? "Putar Ulang Audio" : "Putar Audio Sekarang"}
-              </button>
-            ) : (
-              <span className="text-muted small">Jatah pemutaran audio sudah habis.</span>
-            )}
+            <div className="d-flex align-items-center gap-3 flex-wrap">
+              {audioState === "playing" ? (
+                <div className="d-flex align-items-center gap-2 text-success fw-semibold">
+                  <span className="spinner-grow spinner-grow-sm" aria-hidden="true" />
+                  Audio sedang diputar
+                </div>
+              ) : playsLeft > 0 ? (
+                <button
+                  type="button"
+                  className="btn tp-btn-primary btn-lg d-flex align-items-center gap-2"
+                  onClick={playAudio}
+                  disabled={audioState === "requesting"}
+                >
+                  <Icon name="play" size={20} />
+                  {audioState === "requesting"
+                    ? "Memuat audio..."
+                    : audioState === "ended" || playsLeft < audioMaxPlays
+                      ? "Putar Ulang dari Awal"
+                      : "Putar Audio"}
+                </button>
+              ) : (
+                <div className="fw-semibold text-muted">Batas pemutaran audio sudah habis.</div>
+              )}
 
-            <span className="badge text-bg-light border">
-              Sisa pemutaran: {playsLeft} dari {audioMaxPlays}
-            </span>
+              <span className="badge text-bg-light border fs-6 fw-normal">
+                Sisa putar: <strong>{playsLeft}</strong> dari {audioMaxPlays}
+              </span>
+            </div>
+
+            <div className="small text-muted mt-2">
+              {audioState === "playing" &&
+                "Jangan tutup atau muat ulang halaman ini. Pilih jawaban tiap soal sambil mendengarkan."}
+              {audioState === "idle" &&
+                playsLeft === audioMaxPlays &&
+                "Tekan Putar Audio untuk mulai. Audio memutar semua soal berurutan dan tidak bisa dijeda."}
+              {audioState === "idle" &&
+                playsLeft > 0 &&
+                playsLeft < audioMaxPlays &&
+                "Audio sudah pernah diputar. Memutar lagi akan mengulang dari soal pertama."}
+              {audioState === "ended" && playsLeft > 0 && "Audio selesai. Anda masih boleh memutarnya lagi dari awal."}
+              {audioState === "error" && (
+                <span className="text-danger">
+                  Audio gagal diputar. Periksa koneksi internet Anda, lalu tekan tombol putar lagi.
+                </span>
+              )}
+            </div>
           </div>
         )}
 
-        <div className="row g-4">
+        <div className="row g-4" ref={questionTopRef} style={{ scrollMarginTop: 90 }}>
           {current.passage && (
             <div className="col-lg-6">
-              <div className="tp-card p-4 tp-test-content" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+              <div className="tp-card p-4 tp-test-content tp-passage">
+                <div className="small text-muted mb-2 d-lg-none">Bacaan — geser di dalam kotak ini untuk membaca semuanya</div>
                 {current.passage.title && <h2 className="h6 mb-3">{current.passage.title}</h2>}
-                <p style={{ whiteSpace: "pre-line" }}>
+                <p className="mb-0" style={{ whiteSpace: "pre-line" }}>
                   {highlightPassage(current.passage.body, extractHighlightTerm(current.stem))}
                 </p>
               </div>
@@ -214,76 +387,175 @@ export function SectionRunner({
 
           <div className={current.passage ? "col-lg-6" : "col-12"}>
             <div className="tp-card p-4 tp-test-content">
-              <div className="text-muted small mb-1">Soal {current.number}</div>
-              <p className="fw-semibold">{current.stem}</p>
+              <div className="d-flex justify-content-between align-items-baseline mb-2">
+                <div className="fw-bold text-primary">Soal {current.number}</div>
+                <div className="small" aria-live="polite">
+                  {saveStatus === "saving" && <span className="text-muted">Menyimpan...</span>}
+                  {saveStatus === "saved" && <span className="text-success">✓ Tersimpan</span>}
+                  {saveStatus === "retrying" && <span className="text-warning">Koneksi lambat, mencoba menyimpan lagi...</span>}
+                  {saveStatus === "failed" && (
+                    <span className="text-danger">Gagal menyimpan. Periksa internet, lalu pilih jawabannya lagi.</span>
+                  )}
+                </div>
+              </div>
 
-              <div>
+              <div className="small text-muted mb-2">{questionHint(sectionType, current)}</div>
+              {!stemIsGeneric && <p className="fw-semibold fs-6 lh-lg">{stemContent}</p>}
+
+              <div role="radiogroup" aria-label={`Pilihan jawaban soal ${current.number}`}>
                 {/* Label A/B/C/D dihitung dari POSISI tampil, bukan dari
                     choice.key — urutan pilihan diacak per attempt (SRS §19)
                     supaya "jawabannya selalu di posisi ke-3" tidak bisa
                     dihafal, tapi peserta tetap melihat A-D berurutan wajar.
                     choice.key (kunci asli) hanya dipakai untuk menyimpan/
                     mencocokkan jawaban, tidak pernah ditampilkan langsung. */}
-                {current.choices.map((choice, index) => (
-                  <div
-                    key={choice.key}
-                    className={`tp-choice ${answers[current.id] === choice.key ? "is-selected" : ""}`}
-                    onClick={() => selectChoice(current.id, choice.key)}
-                    role="button"
-                  >
-                    <strong>{String.fromCharCode(65 + index)}.</strong> {choice.text}
-                  </div>
-                ))}
-              </div>
-
-              <div className="small text-muted mt-2">
-                {saveStatus === "saving" && "Menyimpan..."}
-                {saveStatus === "saved" && "Tersimpan"}
-                {saveStatus === "error" && <span className="text-danger">Koneksi terputus — mencoba lagi.</span>}
+                {current.choices.map((choice, i) => {
+                  const selected = answers[current.id] === choice.key;
+                  return (
+                    <button
+                      type="button"
+                      key={choice.key}
+                      role="radio"
+                      aria-checked={selected}
+                      className={`tp-choice ${selected ? "is-selected" : ""}`}
+                      onClick={() => selectChoice(current.id, choice.key)}
+                    >
+                      <span className="tp-choice-letter">{String.fromCharCode(65 + i)}</span>
+                      <span>{choice.text}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="d-flex justify-content-between mt-3">
+            <div className="d-flex justify-content-between gap-2 mt-3">
               <button
                 type="button"
-                className="btn btn-outline-secondary"
+                className="btn btn-outline-secondary btn-lg"
                 disabled={index === 0}
-                onClick={() => setIndex((i) => Math.max(0, i - 1))}
+                onClick={() => goTo(index - 1)}
               >
-                Sebelumnya
+                ← Sebelumnya
               </button>
               {isLastQuestion ? (
-                <button type="button" className="btn tp-btn-primary" onClick={doSubmit}>
-                  Selesai Bagian
+                <button type="button" className="btn btn-success btn-lg" onClick={() => setConfirmOpen(true)}>
+                  Selesai Bagian Ini
                 </button>
               ) : (
-                <button
-                  type="button"
-                  className="btn tp-btn-primary"
-                  onClick={() => setIndex((i) => Math.min(ordered.length - 1, i + 1))}
-                >
-                  Selanjutnya
+                <button type="button" className="btn tp-btn-primary btn-lg" onClick={() => goTo(index + 1)}>
+                  Selanjutnya →
                 </button>
               )}
             </div>
 
-            <div className="tp-nav-grid mt-4">
-              {ordered.map((q, i) => (
+            <div className="tp-card p-3 mt-4">
+              <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+                <div className="fw-semibold small">Daftar soal — tekan nomor untuk pindah</div>
+                <div className="small text-muted d-flex gap-3">
+                  <span>
+                    <span className="tp-legend-box is-answered" /> sudah dijawab
+                  </span>
+                  <span>
+                    <span className="tp-legend-box" /> belum
+                  </span>
+                </div>
+              </div>
+              <div className="tp-nav-grid">
+                {ordered.map((q, i) => (
+                  <button
+                    key={q.id}
+                    type="button"
+                    aria-label={`Soal ${q.number}${answers[q.id] ? ", sudah dijawab" : ", belum dijawab"}`}
+                    className={`tp-nav-item ${i === index ? "is-current" : ""} ${answers[q.id] ? "is-answered" : ""}`}
+                    onClick={() => goTo(i)}
+                  >
+                    {q.number}
+                  </button>
+                ))}
+              </div>
+              {!isLastQuestion && (
                 <button
-                  key={q.id}
                   type="button"
-                  className={`tp-nav-item position-relative ${i === index ? "is-current" : ""} ${
-                    answers[q.id] ? "is-answered" : ""
-                  }`}
-                  onClick={() => setIndex(i)}
+                  className="btn btn-outline-success w-100 mt-3"
+                  onClick={() => setConfirmOpen(true)}
                 >
-                  {q.number}
+                  Sudah selesai? Akhiri bagian {info.short}
                 </button>
-              ))}
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {confirmOpen && (
+        <div className="tp-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+          <div className="tp-modal">
+            <h2 id="confirm-title" className="h5 mb-2">
+              Akhiri bagian {info.short}?
+            </h2>
+            {unanswered.length > 0 ? (
+              <>
+                <p className="mb-2">
+                  Masih ada <strong className="text-danger">{unanswered.length} soal belum dijawab</strong>:
+                </p>
+                <div className="d-flex flex-wrap gap-1 mb-3">
+                  {unanswered.slice(0, 20).map((q) => (
+                    <button
+                      key={q.id}
+                      type="button"
+                      className="btn btn-sm btn-outline-danger py-0"
+                      onClick={() => {
+                        setConfirmOpen(false);
+                        goTo(ordered.indexOf(q));
+                      }}
+                    >
+                      {q.number}
+                    </button>
+                  ))}
+                  {unanswered.length > 20 && <span className="small text-muted align-self-center">dan lainnya</span>}
+                </div>
+              </>
+            ) : (
+              <p className="mb-2 text-success">Semua soal sudah dijawab.</p>
+            )}
+            <p className="small text-muted">
+              Setelah diakhiri, Anda <strong>tidak bisa kembali</strong> ke bagian ini untuk mengubah jawaban.
+            </p>
+            <div className="d-flex gap-2">
+              <button type="button" className="btn btn-outline-secondary flex-fill" onClick={() => setConfirmOpen(false)}>
+                Kembali Mengerjakan
+              </button>
+              <button type="button" className="btn btn-success flex-fill" onClick={() => void doSubmit("manual")}>
+                Ya, Akhiri
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {submitting && (
+        <div className="tp-modal-backdrop" role="alertdialog" aria-live="assertive">
+          <div className="tp-modal text-center">
+            {submitError ? (
+              <>
+                <h2 className="h5">Gagal terhubung</h2>
+                <p className="text-muted">
+                  Jawaban Anda aman tersimpan, tetapi halaman berikutnya gagal dimuat. Periksa internet Anda.
+                </p>
+                <button type="button" className="btn tp-btn-primary w-100" onClick={() => void doSubmit(submitting)}>
+                  Coba Lagi
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="spinner-border text-primary mb-3" aria-hidden="true" />
+                <h2 className="h5">{submitting === "timeup" ? "Waktu habis" : "Menyimpan jawaban..."}</h2>
+                <p className="text-muted mb-0">Sebentar, Anda sedang dibawa ke langkah berikutnya.</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

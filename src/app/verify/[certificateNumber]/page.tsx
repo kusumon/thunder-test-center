@@ -33,9 +33,15 @@ export default async function VerifyPage({
         <div className="tp-card p-4">
           <div className="text-center mb-3">
             {certificate.status === "VALID" ? (
-              <span className="badge text-bg-success">VALID</span>
+              <>
+                <span className="badge text-bg-success fs-6">✓ VALID</span>
+                <div className="small text-muted mt-2">Sertifikat ini asli dan terdaftar di sistem kami.</div>
+              </>
             ) : (
-              <span className="badge text-bg-danger">REVOKED</span>
+              <>
+                <span className="badge text-bg-danger fs-6">DICABUT (REVOKED)</span>
+                <div className="small text-muted mt-2">Sertifikat ini sudah tidak berlaku.</div>
+              </>
             )}
           </div>
 

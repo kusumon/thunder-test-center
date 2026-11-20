@@ -157,10 +157,18 @@ export async function confirmPayment(claimCode: string) {
 export type ClaimState = { error: string } | null;
 
 export async function openByClaimCode(_prev: ClaimState, formData: FormData): Promise<ClaimState> {
-  const code = String(formData.get("claimCode") ?? "")
-    .trim()
-    .toUpperCase();
-  if (!code) return { error: "Kode klaim wajib diisi." };
+  // Toleran terhadap cara orang mengetik ulang kode: huruf kecil, spasi,
+  // tanpa tanda hubung, atau tanpa awalan "TPC" — semuanya dinormalkan ke
+  // format TPC-XXXX-XXXX.
+  let compact = String(formData.get("claimCode") ?? "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+  if (!compact) return { error: "Kode klaim wajib diisi." };
+  if (compact.length === 8) compact = `TPC${compact}`;
+  const code =
+    compact.length === 11 && compact.startsWith("TPC")
+      ? `TPC-${compact.slice(3, 7)}-${compact.slice(7)}`
+      : compact;
 
   const order = await getOrderByClaimCode(code);
   if (!order) return { error: "Kode klaim tidak ditemukan. Periksa kembali penulisannya." };
