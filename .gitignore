@@ -47,3 +47,6 @@ content/**/*.mp3
 
 # Prisma client hasil generate
 /src/generated
+
+# Aset pribadi (mis. tanda tangan sertifikat) — repo ini PUBLIK, jangan di-commit.
+/private/

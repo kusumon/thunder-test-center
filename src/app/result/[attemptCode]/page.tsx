@@ -8,21 +8,9 @@ import { getCertificatePrice, formatRupiah } from "@/lib/settings";
 import { Disclaimer } from "@/components/Disclaimer";
 import { SiteHeader } from "@/components/SiteHeader";
 import { LineIcon } from "@/components/LineIcon";
+import { cefrLevel, MAX_TOTAL_SCORE } from "@/lib/scoreLevel";
 
-/** Skor total maksimum format TOEFL ITP (68 + 68 + 67) × 10 / 3. */
-const MAX_SCORE = 677;
-
-/**
- * Perkiraan level CEFR dari skor total, memakai batas yang lazim dipakai
- * untuk TOEFL ITP. Hanya gambaran untuk peserta — bukan klaim resmi.
- */
-function cefrLevel(score: number): { code: string; label: string } {
-  if (score >= 627) return { code: "C1", label: "Mahir" };
-  if (score >= 543) return { code: "B2", label: "Menengah Atas" };
-  if (score >= 460) return { code: "B1", label: "Menengah" };
-  if (score >= 337) return { code: "A2", label: "Dasar" };
-  return { code: "A1", label: "Pemula" };
-}
+const MAX_SCORE = MAX_TOTAL_SCORE;
 
 function ScoreRing({ score }: { score: number }) {
   const size = 200;
@@ -99,7 +87,7 @@ export default async function ResultPage({ params }: { params: Promise<{ attempt
           <div className="mt-3 mb-4">
             <span className="tp-level-badge">
               <LineIcon name="award" size={18} />
-              Perkiraan level {level.code} · {level.label}
+              Perkiraan level {level.code} · {level.labelId}
             </span>
           </div>
 

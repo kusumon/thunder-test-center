@@ -74,6 +74,19 @@ export async function getAudioSource(
 export { isSupabaseConfigured };
 
 /**
+ * Unduh file privat kecil dari bucket yang sama (mis. tanda tangan
+ * sertifikat di `branding/signature.png`). Mengembalikan null kalau
+ * Supabase belum diatur atau file tidak ada — pemanggil wajib punya fallback.
+ */
+export async function downloadPrivateAsset(objectPath: string): Promise<Buffer | null> {
+  if (!isSupabaseConfigured()) return null;
+  const bucket = process.env.SUPABASE_AUDIO_BUCKET || "toefl-audio";
+  const { data, error } = await supabaseClient().storage.from(bucket).download(objectPath);
+  if (error || !data) return null;
+  return Buffer.from(await data.arrayBuffer());
+}
+
+/**
  * Jaga proyek Supabase gratis tetap "aktif".
  *
  * Supabase menjeda proyek Free Plan yang aktivitas databasenya terlalu

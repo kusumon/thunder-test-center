@@ -2,6 +2,7 @@ import { getOrderByClaimCode } from "@/lib/certificateOrder";
 import { getCertificateWithAttempt, getCertificateSettings } from "@/lib/certificate";
 import { renderCertificatePdf } from "@/lib/certificatePdf";
 import { readEnv } from "@/lib/env";
+import { getSignatureImage } from "@/lib/signatureAsset";
 
 /**
  * Unduh PDF memakai kode klaim (bukan cookie sesi) supaya peserta tetap
@@ -46,8 +47,10 @@ export async function GET(
 
   const settings = getCertificateSettings();
   const baseUrl = readEnv("APP_BASE_URL") ?? new URL(request.url).origin;
+  const signaturePng = await getSignatureImage();
 
   const pdfBuffer = await renderCertificatePdf({
+    signaturePng,
     certificateNumber: certificate.certificateNumber,
     participantName: attempt.participantNameSnapshot,
     overallScore: attempt.overallScore,

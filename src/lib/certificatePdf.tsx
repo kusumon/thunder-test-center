@@ -10,6 +10,7 @@ import {
   Path,
   Circle,
   Rect,
+  Line,
   Defs,
   LinearGradient,
   Stop,
@@ -19,6 +20,11 @@ import {
 } from "@react-pdf/renderer";
 import type { Style } from "@react-pdf/stylesheet";
 import QRCode from "qrcode";
+import {
+  cefrLevel,
+  MAX_SECTION_SCORE,
+  MAX_TOTAL_SCORE,
+} from "@/lib/scoreLevel";
 
 export type CertificatePdfData = {
   certificateNumber: string;
@@ -32,6 +38,8 @@ export type CertificatePdfData = {
   signatoryName: string;
   signatoryPosition: string;
   verifyUrl: string;
+  /** PNG transparan tanda tangan (lib/signatureAsset.ts). Null = garis kosong. */
+  signaturePng?: Buffer | null;
 };
 
 /* ------------------------------------------------------------------ *
@@ -60,19 +68,22 @@ function registerFonts() {
   Font.registerHyphenationCallback((word) => [word]);
 }
 
-/* ------------------------- Palet biru-putih ------------------------- */
-const INK = "#0f172a";
-const NAVY = "#1e3a8a";
+/* ----------------------------- Palet ----------------------------- */
+const INK = "#0b1b3f";
+const NAVY = "#12285c";
+const ROYAL = "#1e40af";
 const BLUE = "#2563eb";
 const BLUE_BRIGHT = "#3b82f6";
 const CYAN = "#22d3ee";
-const BLUE_LINE = "#dbeafe";
+const SKY = "#93c5fd";
+const LINE = "#e2e8f0";
 const GRAY = "#64748b";
 const WHITE = "#ffffff";
 
 const PAGE_W = 841.89;
 const PAGE_H = 595.28;
-const PANEL_W = 246;
+const CARD_W = 232;
+const CARD_H = 290;
 
 /** Bentuk petir (Bootstrap Icons `lightning-fill`, lisensi MIT), viewBox 16x16. */
 const BOLT_PATH =
@@ -83,242 +94,588 @@ const BOLT_PATH =
  * ("fi", "Th") membuat fontkit salah menghitung indeks glyph saat wrapping
  * sehingga huruf hilang di tengah kata ("Certificate" → "Certifcate").
  */
-const NO_LIGATURES = { liga: false, dlig: false, clig: false, calt: false, rlig: false };
+const NO_LIGATURES = {
+  liga: false,
+  dlig: false,
+  clig: false,
+  calt: false,
+  rlig: false,
+};
 
 function withNoLigatures<T extends Record<string, Style>>(raw: T): T {
   return Object.fromEntries(
     Object.entries(raw).map(([key, value]) => [
       key,
-      value.fontFamily ? { ...value, fontFeatureSettings: NO_LIGATURES } : value,
+      value.fontFamily
+        ? { ...value, fontFeatureSettings: NO_LIGATURES }
+        : value,
     ]),
   ) as T;
 }
 
+const F = "Montserrat";
+
 const rawStyles: Record<string, Style> = {
-  page: {
-    backgroundColor: WHITE,
-    fontFamily: "Montserrat",
+  // Padding ada di `frame`, bukan di Page: latar SVG selebar halaman penuh
+  // yang ditaruh di Page ber-padding tidak muat di area kontennya, sehingga
+  // react-pdf memindahkan seluruh isi ke halaman kedua.
+  page: { backgroundColor: WHITE, fontFamily: F },
+  frame: {
+    width: PAGE_W,
+    height: PAGE_H,
+    paddingTop: 40,
+    paddingBottom: 30,
+    paddingLeft: 56,
+    paddingRight: 50,
     display: "flex",
-    flexDirection: "row",
+    flexDirection: "column",
   },
 
-  /* --- Kolom kiri: konten utama, rata kiri (bukan simetris/klasik) --- */
+  /* --- Kepala: identitas penerbit + nomor sertifikat --- */
+  header: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  brandRow: { display: "flex", flexDirection: "row", alignItems: "center" },
+  brandName: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 11.5,
+    letterSpacing: 2.2,
+    color: INK,
+    marginLeft: 10,
+  },
+  brandSub: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 6.3,
+    letterSpacing: 1.8,
+    color: GRAY,
+    textTransform: "uppercase",
+    marginLeft: 10,
+    marginTop: 2,
+  },
+  idChip: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 0.8,
+    borderColor: "#dbeafe",
+    backgroundColor: "#f8fbff",
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
+  },
+  idLabel: {
+    fontFamily: F,
+    fontWeight: 600,
+    fontSize: 5.8,
+    letterSpacing: 1.4,
+    color: GRAY,
+    textTransform: "uppercase",
+  },
+  idValue: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 8,
+    color: INK,
+    marginLeft: 6,
+  },
+
+  /* --- Isi utama --- */
+  main: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginTop: 42,
+  },
+  // Lebar eksplisit (halaman − padding − kartu skor): tanpa ini teks nama
+  // panjang tidak dipatah ke baris baru dan malah menyusup ke bawah kartu.
   left: {
-    width: PAGE_W - PANEL_W,
-    height: PAGE_H,
-    paddingTop: 46,
-    paddingBottom: 28,
-    paddingLeft: 56,
-    paddingRight: 36,
+    width: PAGE_W - 56 - 50 - CARD_W,
+    paddingRight: 34,
     display: "flex",
     flexDirection: "column",
   },
   eyebrow: {
-    fontFamily: "Montserrat",
-    fontWeight: 600,
-    fontSize: 9,
-    letterSpacing: 3,
+    alignSelf: "flex-start",
+    backgroundColor: "#eff6ff",
+    borderRadius: 999,
+    paddingVertical: 5,
+    paddingHorizontal: 11,
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 7.2,
+    letterSpacing: 2.6,
     color: BLUE,
     textTransform: "uppercase",
+  },
+  certifies: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 9.5,
+    color: GRAY,
+    marginTop: 18,
   },
   name: {
-    fontFamily: "Montserrat",
+    fontFamily: F,
     fontWeight: 700,
-    fontSize: 38,
     color: INK,
-    marginTop: 10,
-    maxWidth: 480,
+    marginTop: 4,
+    lineHeight: 1.15,
   },
-  ruleRow: { display: "flex", flexDirection: "row", marginTop: 14 },
-  ruleBlue: { width: 46, height: 4, backgroundColor: BLUE, borderRadius: 2 },
-  ruleCyan: { width: 14, height: 4, backgroundColor: CYAN, borderRadius: 2, marginLeft: 5 },
-
-  lead: {
-    fontFamily: "Montserrat",
+  description: {
+    fontFamily: F,
     fontWeight: 400,
-    fontSize: 10,
+    fontSize: 9.3,
     color: GRAY,
-    marginTop: 20,
+    lineHeight: 1.65,
+    marginTop: 14,
+    maxWidth: 440,
   },
-  scoreNumber: {
-    fontFamily: "Montserrat",
-    fontWeight: 700,
-    fontSize: 68,
-    color: BLUE,
-    marginTop: 2,
+  strong: { fontFamily: F, fontWeight: 700, color: INK },
+
+  sections: { display: "flex", flexDirection: "row", marginTop: 28 },
+  sectionCard: {
+    width: 142,
+    marginRight: 10,
+    borderWidth: 0.8,
+    borderColor: LINE,
+    borderRadius: 12,
+    backgroundColor: "#fbfdff",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
   },
-  scoreLabel: {
-    fontFamily: "Montserrat",
+  sectionLabel: {
+    fontFamily: F,
     fontWeight: 600,
-    fontSize: 8.5,
-    letterSpacing: 2,
-    color: NAVY,
-    textTransform: "uppercase",
-    marginTop: -4,
-  },
-  scoreCaption: {
-    fontFamily: "Montserrat",
-    fontWeight: 500,
-    fontSize: 6.5,
-    letterSpacing: 0.8,
+    fontSize: 6,
+    letterSpacing: 1.3,
     color: GRAY,
     textTransform: "uppercase",
-    marginTop: 3,
   },
-
-  statsRow: { display: "flex", flexDirection: "row", alignItems: "center", marginTop: 26 },
-  statBox: { display: "flex", flexDirection: "column", paddingRight: 22 },
-  statValue: { fontFamily: "Montserrat", fontWeight: 700, fontSize: 19, color: INK },
-  statLabel: {
-    fontFamily: "Montserrat",
-    fontWeight: 500,
-    fontSize: 6.8,
-    letterSpacing: 0.6,
-    color: GRAY,
-    textTransform: "uppercase",
-    marginTop: 3,
-  },
-  statDivider: { width: 1, height: 30, backgroundColor: BLUE_LINE, marginRight: 22 },
-
-  footerRow: {
+  sectionValueRow: {
     display: "flex",
     flexDirection: "row",
     alignItems: "flex-end",
-    gap: 64,
-    marginTop: 72,
+    marginTop: 4,
+    marginBottom: 7,
   },
-  footerLabel: {
-    fontFamily: "Montserrat",
+  sectionValue: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 21,
+    color: INK,
+    lineHeight: 1,
+  },
+  sectionMax: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 7.5,
+    color: "#94a3b8",
+    marginLeft: 3,
+    marginBottom: 2,
+  },
+
+  /* --- Kartu skor gelap --- */
+  card: {
+    width: CARD_W,
+    height: CARD_H,
+    borderRadius: 20,
+    position: "relative",
+    overflow: "hidden",
+  },
+  cardBody: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: CARD_W,
+    height: CARD_H,
+    padding: 22,
+    display: "flex",
+    flexDirection: "column",
+  },
+  cardLabel: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 7,
+    letterSpacing: 2.4,
+    color: CYAN,
+    textTransform: "uppercase",
+  },
+  cardScore: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 66,
+    color: WHITE,
+    lineHeight: 1,
+    marginTop: 10,
+  },
+  cardOutOf: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 8,
+    color: "#bfdbfe",
+    marginTop: 2,
+  },
+  cardDivider: {
+    height: 0.8,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    marginVertical: 16,
+  },
+  cardSmall: {
+    fontFamily: F,
     fontWeight: 600,
-    fontSize: 6.5,
+    fontSize: 6,
+    letterSpacing: 1.6,
+    color: SKY,
+    textTransform: "uppercase",
+  },
+  levelRow: {
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 6,
+  },
+  levelCode: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 26,
+    color: WHITE,
+    lineHeight: 1,
+  },
+  levelPill: {
+    marginLeft: 10,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    borderRadius: 999,
+    paddingVertical: 4,
+    paddingHorizontal: 9,
+    fontFamily: F,
+    fontWeight: 600,
+    fontSize: 7.5,
+    color: "#e0f2fe",
+  },
+  cardFoot: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 6,
+    letterSpacing: 1,
+    color: SKY,
+    marginTop: "auto",
+  },
+
+  /* --- Kaki: tanda tangan, tanggal, verifikasi --- */
+  footer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginTop: "auto",
+  },
+  signBlock: { width: 196, display: "flex", flexDirection: "column" },
+  // Tanda tangan sedikit menimpa garis (seperti ditandatangani sungguhan) dan
+  // digeser ke kanan supaya goresan turunnya jatuh di luar teks nama.
+  signImage: {
+    height: 66,
+    objectFit: "contain",
+    alignSelf: "flex-start",
+    marginLeft: 66,
+    marginBottom: -11,
+  },
+  signSpacer: { height: 55 },
+  signLine: {
+    height: 1,
+    width: 176,
+    backgroundColor: "#94a3b8",
+    marginBottom: 6,
+  },
+  footLabel: {
+    fontFamily: F,
+    fontWeight: 700,
+    fontSize: 6,
     letterSpacing: 1.6,
     color: BLUE,
     textTransform: "uppercase",
     marginBottom: 4,
   },
-  footerValue: { fontFamily: "Montserrat", fontWeight: 700, fontSize: 10.5, color: INK },
-  footerSub: { fontFamily: "Montserrat", fontWeight: 400, fontSize: 7.5, color: GRAY, marginTop: 1 },
-  signatureLine: { height: 1, width: 128, backgroundColor: BLUE_LINE, marginBottom: 6 },
+  footValue: { fontFamily: F, fontWeight: 700, fontSize: 10, color: INK },
+  footSub: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 7.2,
+    color: GRAY,
+    marginTop: 1.5,
+  },
 
-  disclaimer: {
-    fontFamily: "Montserrat",
-    fontWeight: 400,
+  verifyRow: { display: "flex", flexDirection: "row", alignItems: "center" },
+  qrBox: {
+    borderWidth: 0.8,
+    borderColor: LINE,
+    borderRadius: 10,
+    padding: 6,
+    backgroundColor: WHITE,
+  },
+  qr: { width: 60, height: 60 },
+  verifyText: { marginLeft: 10, width: 128 },
+  verifyUrl: {
+    fontFamily: F,
+    fontWeight: 600,
+    fontSize: 6.6,
+    color: INK,
+    marginTop: 3,
+    lineHeight: 1.4,
+  },
+  verifyPath: {
+    fontFamily: F,
+    fontWeight: 500,
     fontSize: 6.2,
     color: GRAY,
-    marginTop: 14,
-    maxWidth: 500,
-    lineHeight: 1.5,
+    lineHeight: 1.4,
   },
 
-  /* --- Panel kanan: identitas penerbit, gradasi navy → biru --- */
-  panel: {
-    width: PANEL_W,
-    height: PAGE_H,
-    position: "relative",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingVertical: 40,
-  },
-  panelName: {
-    fontFamily: "Montserrat",
-    fontWeight: 700,
-    fontSize: 15,
-    letterSpacing: 1.6,
-    color: WHITE,
-    textAlign: "center",
-    textTransform: "uppercase",
+  disclaimer: {
+    fontFamily: F,
+    fontWeight: 400,
+    fontSize: 5.8,
+    color: "#94a3b8",
     marginTop: 14,
-    maxWidth: 180,
-  },
-  panelSub: {
-    fontFamily: "Montserrat",
-    fontWeight: 500,
-    fontSize: 6.5,
-    letterSpacing: 1.6,
-    color: "#bfdbfe",
-    textAlign: "center",
-    textTransform: "uppercase",
-    marginTop: 5,
-  },
-  qrWrap: { backgroundColor: WHITE, borderRadius: 10, padding: 8 },
-  qr: { width: 66, height: 66 },
-  panelCertLabel: {
-    fontFamily: "Montserrat",
-    fontWeight: 600,
-    fontSize: 6,
-    letterSpacing: 1.4,
-    color: "#bfdbfe",
-    textTransform: "uppercase",
-    marginTop: 10,
-  },
-  panelCertNumber: {
-    fontFamily: "Montserrat",
-    fontWeight: 700,
-    fontSize: 9.5,
-    color: WHITE,
-    marginTop: 2,
+    lineHeight: 1.5,
   },
 };
 
 const styles = StyleSheet.create(withNoLigatures(rawStyles));
 
-/** Emblem petir: lingkaran putih dengan bilah petir biru di tengahnya. */
-function BoltEmblem({ size = 52 }: { size?: number }) {
+/** Nama panjang mengecil otomatis supaya tetap satu-dua baris rapi. */
+function nameFontSize(name: string): number {
+  const n = name.length;
+  if (n <= 14) return 44;
+  if (n <= 20) return 37;
+  if (n <= 28) return 31;
+  if (n <= 38) return 25;
+  return 21;
+}
+
+/** Emblem: cakram bergradasi biru dengan petir putih — sama dengan logo situs. */
+function BoltEmblem({ size = 34 }: { size?: number }) {
   const r = size / 2;
-  const boltSize = size * 0.48;
+  const boltSize = size * 0.5;
   const offset = (size - boltSize) / 2;
   const scale = boltSize / 16;
   return (
     <Svg width={size} height={size}>
-      <Circle cx={r} cy={r} r={r - 1} fill={WHITE} />
-      <Path d={BOLT_PATH} fill={BLUE} transform={`translate(${offset}, ${offset}) scale(${scale})`} />
+      <Defs>
+        <LinearGradient id="emblemGrad" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={ROYAL} />
+          <Stop offset="1" stopColor={BLUE_BRIGHT} />
+        </LinearGradient>
+      </Defs>
+      <Circle cx={r} cy={r} r={r} fill="url(#emblemGrad)" />
+      <Path
+        d={BOLT_PATH}
+        fill={WHITE}
+        transform={`translate(${offset}, ${offset}) scale(${scale})`}
+      />
     </Svg>
   );
 }
 
-/**
- * Dekorasi panel kanan: gradasi, sudut terpotong diagonal (aksen
- * "futuristik"), bilah petir raksasa transparan sebagai watermark, dan
- * pola titik teknis di bagian bawah.
- */
-function PanelBackground() {
+/** Latar halaman: bingkai tipis, strip gradasi kiri, pendar lembut, garis & titik "teknis". */
+function PageBackground() {
   const dots = [];
-  for (let row = 0; row < 4; row += 1) {
-    for (let col = 0; col < 8; col += 1) {
-      dots.push({ x: 26 + col * 14, y: 372 + row * 13 });
+  for (let row = 0; row < 9; row += 1) {
+    for (let col = 0; col < 2; col += 1) {
+      dots.push({ x: 26 + col * 10, y: 236 + row * 10 });
     }
   }
+  // Dibungkus View absolut: posisi absolut langsung di <Svg> tidak
+  // dihormati di tingkat Page, sehingga SVG ikut mengalir dan mendorong
+  // seluruh isi sertifikat ke halaman kedua.
+  return (
+    <View
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: PAGE_W,
+        height: PAGE_H,
+      }}
+    >
+      <Svg width={PAGE_W} height={PAGE_H}>
+        <Defs>
+          <LinearGradient id="stripGrad" x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={NAVY} />
+            <Stop offset="0.55" stopColor={BLUE} />
+            <Stop offset="1" stopColor={CYAN} />
+          </LinearGradient>
+          <LinearGradient id="glowGrad" x1="0" y1="0" x2="1" y2="1">
+            <Stop offset="0" stopColor={CYAN} />
+            <Stop offset="1" stopColor={BLUE} />
+          </LinearGradient>
+        </Defs>
 
+        {/* Pendar gradasi di pojok — kesan modern tanpa memakan tinta banyak. */}
+        <Circle
+          cx={PAGE_W - 10}
+          cy={-30}
+          r={220}
+          fill="url(#glowGrad)"
+          opacity={0.09}
+        />
+        <Circle cx={PAGE_W + 30} cy={40} r={120} fill={CYAN} opacity={0.08} />
+        <Circle
+          cx={90}
+          cy={PAGE_H + 70}
+          r={190}
+          fill="url(#glowGrad)"
+          opacity={0.06}
+        />
+
+        {/* Bingkai dalam tipis. */}
+        <Rect
+          x={16}
+          y={16}
+          width={PAGE_W - 32}
+          height={PAGE_H - 32}
+          rx={16}
+          fill="none"
+          stroke={LINE}
+          strokeWidth={0.8}
+        />
+
+        {/* Strip gradasi vertikal di tepi kiri. */}
+        <Rect
+          x={16}
+          y={70}
+          width={4}
+          height={PAGE_H - 140}
+          rx={2}
+          fill="url(#stripGrad)"
+        />
+
+        {/* Garis diagonal tipis di pojok kanan-bawah. */}
+        <Line
+          x1={PAGE_W - 16}
+          y1={PAGE_H - 150}
+          x2={PAGE_W - 150}
+          y2={PAGE_H - 16}
+          stroke={BLUE}
+          strokeWidth={0.6}
+          opacity={0.14}
+        />
+        <Line
+          x1={PAGE_W - 16}
+          y1={PAGE_H - 120}
+          x2={PAGE_W - 120}
+          y2={PAGE_H - 16}
+          stroke={CYAN}
+          strokeWidth={0.6}
+          opacity={0.22}
+        />
+
+        {/* Kisi titik kecil dekat strip kiri. */}
+        {dots.map((d, i) => (
+          <Circle
+            key={i}
+            cx={d.x}
+            cy={d.y}
+            r={0.8}
+            fill={BLUE}
+            opacity={0.25}
+          />
+        ))}
+      </Svg>
+    </View>
+  );
+}
+
+/** Garis bawah nama: batang gradasi biru → cyan dengan titik aksen. */
+function NameUnderline() {
+  return (
+    <Svg width={150} height={6} style={{ marginTop: 12 }}>
+      <Defs>
+        <LinearGradient id="underlineGrad" x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor={BLUE} />
+          <Stop offset="1" stopColor={CYAN} />
+        </LinearGradient>
+      </Defs>
+      <Rect
+        x={0}
+        y={1}
+        width={118}
+        height={4}
+        rx={2}
+        fill="url(#underlineGrad)"
+      />
+      <Circle cx={128} cy={3} r={2} fill={CYAN} />
+      <Circle cx={137} cy={3} r={1.4} fill={CYAN} opacity={0.5} />
+    </Svg>
+  );
+}
+
+function ScoreBar({
+  value,
+  max,
+  id,
+}: {
+  value: number;
+  max: number;
+  id: string;
+}) {
+  const width = 116;
+  const fill = Math.max(4, Math.min(1, value / max) * width);
+  return (
+    <Svg width={width} height={4}>
+      <Defs>
+        <LinearGradient id={id} x1="0" y1="0" x2="1" y2="0">
+          <Stop offset="0" stopColor={BLUE} />
+          <Stop offset="1" stopColor={CYAN} />
+        </LinearGradient>
+      </Defs>
+      <Rect x={0} y={0} width={width} height={4} rx={2} fill={LINE} />
+      <Rect x={0} y={0} width={fill} height={4} rx={2} fill={`url(#${id})`} />
+    </Svg>
+  );
+}
+
+/** Latar kartu skor: gradasi navy, pendar cyan, watermark petir, titik-titik. */
+function CardBackground() {
+  const dots = [];
+  for (let row = 0; row < 4; row += 1) {
+    for (let col = 0; col < 6; col += 1) {
+      dots.push({ x: CARD_W - 70 + col * 9, y: CARD_H - 44 + row * 9 });
+    }
+  }
   return (
     <Svg
-      width={PANEL_W}
-      height={PAGE_H}
+      width={CARD_W}
+      height={CARD_H}
       style={{ position: "absolute", top: 0, left: 0 }}
     >
       <Defs>
-        <LinearGradient id="panelGradient" x1="0" y1="0" x2="1" y2="1">
-          <Stop offset="0" stopColor={NAVY} />
-          <Stop offset="1" stopColor={BLUE_BRIGHT} />
+        <LinearGradient id="cardGrad" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0" stopColor={INK} />
+          <Stop offset="0.6" stopColor={NAVY} />
+          <Stop offset="1" stopColor={ROYAL} />
         </LinearGradient>
       </Defs>
-      <Rect x={0} y={0} width={PANEL_W} height={PAGE_H} fill="url(#panelGradient)" />
-
-      {/* Sudut terpotong di kiri-atas: aksen geometris, bukan sekadar kotak polos. */}
-      <Path d="M0,0 L58,0 L0,58 Z" fill={WHITE} opacity={0.06} />
-      {/* Aksen cyan di kanan-bawah, kontras tipis dari palet biru dasar. */}
-      <Path d={`M${PANEL_W},${PAGE_H} L${PANEL_W},${PAGE_H - 70} L${PANEL_W - 70},${PAGE_H} Z`} fill={CYAN} opacity={0.14} />
-
-      {/* Watermark petir raksasa, nyaris tak terlihat, sekadar tekstur. */}
+      <Rect
+        x={0}
+        y={0}
+        width={CARD_W}
+        height={CARD_H}
+        rx={20}
+        fill="url(#cardGrad)"
+      />
+      <Circle cx={CARD_W + 10} cy={-10} r={110} fill={CYAN} opacity={0.18} />
+      <Circle cx={CARD_W - 10} cy={20} r={60} fill={CYAN} opacity={0.12} />
       <Path
         d={BOLT_PATH}
         fill={WHITE}
-        opacity={0.05}
-        transform={`translate(-30, 130) rotate(-8) scale(11)`}
+        opacity={0.06}
+        transform={`translate(${CARD_W - 120}, 60) rotate(-10) scale(9)`}
       />
-
-      {/* Kisi titik kecil — sentuhan "teknis" di area kosong bawah panel. */}
       {dots.map((d, i) => (
         <Circle key={i} cx={d.x} cy={d.y} r={0.9} fill={WHITE} opacity={0.22} />
       ))}
@@ -326,101 +683,205 @@ function PanelBackground() {
   );
 }
 
-function CertificateDocument({ data, qrDataUrl }: { data: CertificatePdfData; qrDataUrl: string }) {
-  const dateLabel = new Intl.DateTimeFormat("id-ID", { dateStyle: "long" }).format(data.completedAt);
+function CertificateDocument({
+  data,
+  qrDataUrl,
+}: {
+  data: CertificatePdfData;
+  qrDataUrl: string;
+}) {
+  // Server Vercel berjalan di UTC — tanggal wajib dihitung di zona WIB.
+  const dateLabel = new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "long",
+    timeZone: "Asia/Jakarta",
+  }).format(data.completedAt);
+  const level = cefrLevel(data.overallScore);
+  const signatoryPosition = data.signatoryPosition.replace(/\s+/g, " ").trim();
+  // URL tidak berspasi sehingga tidak bisa dipatah otomatis — pecah jadi
+  // dua baris: domain, lalu path /verify/<nomor>.
+  const verifyLabel = data.verifyUrl.replace(/^https?:\/\//, "");
+  const slashAt = verifyLabel.indexOf("/");
+  const verifyHost = slashAt > 0 ? verifyLabel.slice(0, slashAt) : verifyLabel;
+  const verifyPath = slashAt > 0 ? verifyLabel.slice(slashAt) : "";
+  const signatureSrc = data.signaturePng
+    ? `data:image/png;base64,${data.signaturePng.toString("base64")}`
+    : null;
+
+  const sections = [
+    {
+      key: "L",
+      label: "Listening",
+      value: data.listeningScaled,
+      max: MAX_SECTION_SCORE.LISTENING,
+    },
+    {
+      key: "S",
+      label: "Structure",
+      value: data.structureScaled,
+      max: MAX_SECTION_SCORE.STRUCTURE,
+    },
+    {
+      key: "R",
+      label: "Reading",
+      value: data.readingScaled,
+      max: MAX_SECTION_SCORE.READING,
+    },
+  ];
 
   return (
-    <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
-        <View style={styles.left}>
-          <Text style={styles.eyebrow}>Certificate of Achievement</Text>
-          <Text style={styles.name}>{data.participantName}</Text>
-          <View style={styles.ruleRow}>
-            <View style={styles.ruleBlue} />
-            <View style={styles.ruleCyan} />
-          </View>
-
-          <Text style={styles.lead}>has achieved an overall score of</Text>
-          <Text style={styles.scoreNumber}>{data.overallScore}</Text>
-          <Text style={styles.scoreLabel}>Overall Score</Text>
-          <Text style={styles.scoreCaption}>TOEFL Prediction Test · ITP Format</Text>
-
-          <View style={styles.statsRow}>
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{data.listeningScaled}</Text>
-              <Text style={styles.statLabel}>Listening</Text>
+    <Document
+      title={`Certificate ${data.certificateNumber}`}
+      author={data.institutionName}
+    >
+      <Page size="A4" orientation="landscape" style={styles.page} wrap={false}>
+        <PageBackground />
+        <View style={styles.frame}>
+          {/* Kepala */}
+          <View style={styles.header}>
+            <View style={styles.brandRow}>
+              <BoltEmblem />
+              <View>
+                <Text style={styles.brandName}>
+                  {data.institutionName.toUpperCase()}
+                </Text>
+                <Text style={styles.brandSub}>
+                  English Proficiency Assessment
+                </Text>
+              </View>
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{data.structureScaled}</Text>
-              <Text style={styles.statLabel}>Structure &amp; Written</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{data.readingScaled}</Text>
-              <Text style={styles.statLabel}>Reading</Text>
+            <View style={styles.idChip}>
+              <Text style={styles.idLabel}>Certificate ID</Text>
+              <Text style={styles.idValue}>{data.certificateNumber}</Text>
             </View>
           </View>
 
-          <View style={styles.footerRow}>
-            <View>
-              <Text style={styles.footerLabel}>Date Issued</Text>
-              <Text style={styles.footerValue}>{dateLabel}</Text>
+          {/* Isi utama */}
+          <View style={styles.main}>
+            <View style={styles.left}>
+              <Text style={styles.eyebrow}>Certificate of Achievement</Text>
+              <Text style={styles.certifies}>This is proudly presented to</Text>
+              <Text
+                style={[
+                  styles.name,
+                  { fontSize: nameFontSize(data.participantName) },
+                ]}
+              >
+                {data.participantName}
+              </Text>
+              <NameUnderline />
+
+              <Text style={styles.description}>
+                for successfully completing the English proficiency assessment
+                administered by{" "}
+                <Text style={styles.strong}>{data.institutionName}</Text>,
+                demonstrating an estimated level of{" "}
+                <Text style={styles.strong}>
+                  CEFR {level.code} — {level.labelEn}
+                </Text>
+                .
+              </Text>
+
+              <View style={styles.sections}>
+                {sections.map((s) => (
+                  <View key={s.key} style={styles.sectionCard}>
+                    <Text style={styles.sectionLabel}>{s.label}</Text>
+                    <View style={styles.sectionValueRow}>
+                      <Text style={styles.sectionValue}>{s.value}</Text>
+                      <Text style={styles.sectionMax}>/ {s.max}</Text>
+                    </View>
+                    <ScoreBar value={s.value} max={s.max} id={`bar${s.key}`} />
+                  </View>
+                ))}
+              </View>
             </View>
-            {/* Garis tanda tangan selalu digambar: kalau penandatangan belum
-                dikonfigurasi, sertifikat tetap seimbang dan masih bisa
-                ditandatangani manual setelah dicetak. */}
-            <View>
-              <View style={styles.signatureLine} />
+
+            <View style={styles.card}>
+              <CardBackground />
+              <View style={styles.cardBody}>
+                <Text style={styles.cardLabel}>Overall Score</Text>
+                <Text style={styles.cardScore}>{data.overallScore}</Text>
+                <Text style={styles.cardOutOf}>out of {MAX_TOTAL_SCORE}</Text>
+                <View style={styles.cardDivider} />
+                <Text style={styles.cardSmall}>Estimated CEFR Level</Text>
+                <View style={styles.levelRow}>
+                  <Text style={styles.levelCode}>{level.code}</Text>
+                  <Text style={styles.levelPill}>{level.labelEn}</Text>
+                </View>
+                <Text style={styles.cardFoot}>
+                  TOEFL ITP FORMAT · PREDICTION TEST
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Kaki */}
+          <View style={styles.footer}>
+            {/* Garis tanda tangan selalu digambar: kalau gambar tanda tangan
+              belum ada, sertifikat tetap seimbang dan bisa ditandatangani
+              manual setelah dicetak. */}
+            <View style={styles.signBlock}>
+              {signatureSrc ? (
+                // eslint-disable-next-line jsx-a11y/alt-text
+                <Image src={signatureSrc} style={styles.signImage} />
+              ) : (
+                <View style={styles.signSpacer} />
+              )}
+              <View style={styles.signLine} />
               {data.signatoryName ? (
                 <>
-                  <Text style={styles.footerValue}>{data.signatoryName}</Text>
-                  <Text style={styles.footerSub}>{data.signatoryPosition}</Text>
+                  <Text style={styles.footValue}>{data.signatoryName}</Text>
+                  <Text style={styles.footSub}>{signatoryPosition}</Text>
                 </>
               ) : (
-                <Text style={styles.footerLabel}>Authorized Signature</Text>
+                <Text style={styles.footLabel}>Authorized Signature</Text>
               )}
+            </View>
+
+            <View>
+              <Text style={styles.footLabel}>Date Issued</Text>
+              <Text style={styles.footValue}>{dateLabel}</Text>
+              <Text style={styles.footSub}>{data.institutionName}</Text>
+            </View>
+
+            <View style={styles.verifyRow}>
+              <View style={styles.qrBox}>
+                {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                <Image src={qrDataUrl} style={styles.qr} />
+              </View>
+              <View style={styles.verifyText}>
+                <Text style={styles.footLabel}>Scan to verify</Text>
+                <Text style={styles.footSub}>Check authenticity at</Text>
+                <Text style={styles.verifyUrl}>{verifyHost}</Text>
+                {verifyPath && (
+                  <Text style={styles.verifyPath}>{verifyPath}</Text>
+                )}
+              </View>
             </View>
           </View>
 
           <Text style={styles.disclaimer}>
-            This certificate records the result of a TOEFL Prediction Test administered by{" "}
-            {data.institutionName}. It is a prediction/simulation result and is not an official TOEFL
-            score report issued by ETS. Verify the authenticity of this certificate at{" "}
-            {data.verifyUrl}
+            This certificate records the result of a TOEFL-style prediction test
+            administered by {data.institutionName}. It is a
+            prediction/simulation result and is not an official TOEFL score
+            report issued by ETS.
           </Text>
-        </View>
-
-        <View style={styles.panel}>
-          <PanelBackground />
-
-          <View style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <BoltEmblem />
-            <Text style={styles.panelName}>{data.institutionName}</Text>
-            <Text style={styles.panelSub}>English Proficiency Assessment</Text>
-          </View>
-
-          <View style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <View style={styles.qrWrap}>
-              {/* eslint-disable-next-line jsx-a11y/alt-text */}
-              <Image src={qrDataUrl} style={styles.qr} />
-            </View>
-            <Text style={styles.panelCertLabel}>Certificate No.</Text>
-            <Text style={styles.panelCertNumber}>{data.certificateNumber}</Text>
-          </View>
         </View>
       </Page>
     </Document>
   );
 }
 
-export async function renderCertificatePdf(data: CertificatePdfData): Promise<Buffer> {
+export async function renderCertificatePdf(
+  data: CertificatePdfData,
+): Promise<Buffer> {
   registerFonts();
   const qrDataUrl = await QRCode.toDataURL(data.verifyUrl, {
     margin: 0,
     width: 300,
-    color: { dark: NAVY, light: "#00000000" },
+    color: { dark: INK, light: "#00000000" },
   });
-  const buffer = await renderToBuffer(<CertificateDocument data={data} qrDataUrl={qrDataUrl} />);
+  const buffer = await renderToBuffer(
+    <CertificateDocument data={data} qrDataUrl={qrDataUrl} />,
+  );
   return Buffer.from(buffer);
 }
