@@ -74,6 +74,47 @@ export async function getAudioSource(
 export { isSupabaseConfigured };
 
 /**
+ * Jaga proyek Supabase gratis tetap "aktif".
+ *
+ * Supabase menjeda proyek Free Plan yang aktivitas databasenya terlalu
+ * sedikit selama 7 hari. Data utama aplikasi ini ada di Neon — Supabase
+ * hanya menyimpan audio Listening — jadi Supabase hanya "melihat" aktivitas
+ * saat ada peserta memutar audio. Seminggu tanpa peserta = proyek dijeda =
+ * audio Listening mati untuk peserta berikutnya (pernah terjadi).
+ *
+ * Dipanggil sekali sehari oleh Vercel Cron (vercel.json → /api/cron/keepalive).
+ * Beberapa request sekaligus karena dokumentasi Supabase menyebut "a few
+ * user requests to the database each day"; setiap request Storage API
+ * menjalankan query ke skema storage di Postgres Supabase.
+ */
+export async function keepSupabaseAwake(): Promise<{ ok: boolean; detail: string }> {
+  if (!isSupabaseConfigured()) return { ok: true, detail: "Supabase belum diatur — dilewati." };
+
+  const bucket = process.env.SUPABASE_AUDIO_BUCKET || "toefl-audio";
+  const client = supabaseClient();
+
+  const steps: [string, () => Promise<{ error: { message: string } | null }>][] = [
+    ["listBuckets", () => client.storage.listBuckets()],
+    ["list root", () => client.storage.from(bucket).list("", { limit: 10 })],
+    ["getBucket", () => client.storage.getBucket(bucket)],
+  ];
+
+  const failures: string[] = [];
+  for (const [name, run] of steps) {
+    try {
+      const { error } = await run();
+      if (error) failures.push(`${name}: ${error.message}`);
+    } catch (error) {
+      failures.push(`${name}: ${error instanceof Error ? error.message : "unknown error"}`);
+    }
+  }
+
+  return failures.length === 0
+    ? { ok: true, detail: `${steps.length} request ke Supabase berhasil.` }
+    : { ok: false, detail: failures.join(" | ") };
+}
+
+/**
  * Tautan unggah sekali-pakai (berlaku 2 jam) supaya BROWSER admin mengirim
  * file MP3 langsung ke Supabase. Sebelumnya file dikirim lewat server
  * action, yang dibatasi 1 MB oleh Next.js (dan ~4,5 MB oleh Vercel) —
