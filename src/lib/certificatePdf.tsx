@@ -374,22 +374,33 @@ const rawStyles: Record<string, Style> = {
     alignItems: "flex-end",
     marginTop: "auto",
   },
-  signBlock: { width: 196, display: "flex", flexDirection: "column" },
-  // Tanda tangan sedikit menimpa garis (seperti ditandatangani sungguhan) dan
-  // digeser ke kanan supaya goresan turunnya jatuh di luar teks nama.
+  // Blok tanda tangan rata tengah: gambar tanda tangan tepat di tengah garis,
+  // nama & jabatan di tengah di bawahnya. File PNG-nya dipotong dengan jarak
+  // kiri-kanan yang sama, jadi tinta tanda tangan ikut presisi di tengah.
+  signBlock: { width: 196, display: "flex", flexDirection: "column", alignItems: "center" },
+  // Sedikit menimpa garis (seperti ditandatangani sungguhan); goresan turunnya
+  // hanya ±8pt di bawah garis, dan nama diberi jarak 12pt supaya tidak tertabrak.
   signImage: {
     height: 66,
     objectFit: "contain",
-    alignSelf: "flex-start",
-    marginLeft: 66,
-    marginBottom: -11,
+    alignSelf: "center",
+    marginBottom: -8,
   },
-  signSpacer: { height: 55 },
+  signSpacer: { height: 58 },
   signLine: {
     height: 1,
     width: 176,
     backgroundColor: "#94a3b8",
-    marginBottom: 6,
+    marginBottom: 12,
+  },
+  signName: { fontFamily: F, fontWeight: 700, fontSize: 10, color: INK, textAlign: "center" },
+  signRole: {
+    fontFamily: F,
+    fontWeight: 500,
+    fontSize: 7.2,
+    color: GRAY,
+    marginTop: 1.5,
+    textAlign: "center",
   },
   footLabel: {
     fontFamily: F,
@@ -829,8 +840,8 @@ function CertificateDocument({
               <View style={styles.signLine} />
               {data.signatoryName ? (
                 <>
-                  <Text style={styles.footValue}>{data.signatoryName}</Text>
-                  <Text style={styles.footSub}>{signatoryPosition}</Text>
+                  <Text style={styles.signName}>{data.signatoryName}</Text>
+                  <Text style={styles.signRole}>{signatoryPosition}</Text>
                 </>
               ) : (
                 <Text style={styles.footLabel}>Authorized Signature</Text>
