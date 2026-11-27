@@ -15,6 +15,7 @@ import {
   submitSectionSession,
 } from "@/lib/sections";
 import { submitAttempt } from "@/lib/results";
+import { normalizeClaimCode } from "@/lib/claimCode";
 import {
   getOrCreateOrder,
   markOrderAsPaidClaimed,
@@ -25,6 +26,8 @@ export type StartTestState = { error: string } | null;
 
 /** Landing page (FR-001): validasi nama, buat sesi + attempt, lalu masuk ke instruksi. */
 export async function startTest(_prevState: StartTestState, formData: FormData): Promise<StartTestState> {
+  // Aksi bisa dipanggil langsung dengan data apa pun (bukan hanya dari form).
+  if (!(formData instanceof FormData)) return { error: "Permintaan tidak valid." };
   const parsed = sanitizeParticipantName(formData.get("name"));
   if (!parsed.ok) return { error: parsed.error };
 
@@ -61,10 +64,22 @@ export async function saveAnswerAction(attemptCode: string, questionId: string, 
   // dan section-nya masih berjalan (belum disubmit / waktu belum habis),
   // sebelum menulis jawaban.
   const sectionIds = attempt.testPackage.sections.map((s) => s.id);
+  // Validasi bentuk dulu (murah) sebelum menyentuh database.
+  if (typeof questionId !== "string" || !/^[0-9a-f-]{36}$/i.test(questionId)) {
+    throw new Error("Soal tidak ditemukan pada attempt ini.");
+  }
+  if (typeof choiceKey !== "string" || !/^[A-Z]$/.test(choiceKey)) {
+    throw new Error("Pilihan jawaban tidak valid.");
+  }
   const question = await prisma.question.findFirst({
     where: { id: questionId, sectionId: { in: sectionIds } },
+    include: { choices: { select: { choiceKey: true } } },
   });
   if (!question) throw new Error("Soal tidak ditemukan pada attempt ini.");
+  // Pentest P7: sebelumnya huruf apa pun ("Z") ikut tersimpan.
+  if (!question.choices.some((c) => c.choiceKey === choiceKey)) {
+    throw new Error("Pilihan jawaban tidak valid.");
+  }
 
   const session = findSectionSession(attempt, question.sectionId);
   if (!session || session.submittedAt || isSectionTimeUp(session)) {
@@ -140,7 +155,8 @@ export async function generateCertificate(attemptCode: string, formData: FormDat
     throw new Error("Attempt belum selesai dinilai.");
   }
 
-  const rawNumber = String(formData.get("whatsappNumber") ?? "").replace(/\D/g, "");
+  const rawInput = formData instanceof FormData ? formData.get("whatsappNumber") : null;
+  const rawNumber = String(rawInput ?? "").replace(/\D/g, "").slice(0, 20);
   const whatsappNumber = rawNumber.length >= 9 ? rawNumber : null;
 
   const order = await getOrCreateOrder(attempt.id, whatsappNumber);
@@ -157,18 +173,10 @@ export async function confirmPayment(claimCode: string) {
 export type ClaimState = { error: string } | null;
 
 export async function openByClaimCode(_prev: ClaimState, formData: FormData): Promise<ClaimState> {
-  // Toleran terhadap cara orang mengetik ulang kode: huruf kecil, spasi,
-  // tanpa tanda hubung, atau tanpa awalan "TPC" — semuanya dinormalkan ke
-  // format TPC-XXXX-XXXX.
-  let compact = String(formData.get("claimCode") ?? "")
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
-  if (!compact) return { error: "Kode klaim wajib diisi." };
-  if (compact.length === 8) compact = `TPC${compact}`;
-  const code =
-    compact.length === 11 && compact.startsWith("TPC")
-      ? `TPC-${compact.slice(3, 7)}-${compact.slice(7)}`
-      : compact;
+  if (!(formData instanceof FormData)) return { error: "Permintaan tidak valid." };
+  // Toleran terhadap huruf kecil, spasi, tanpa tanda hubung / awalan "TPC".
+  const code = normalizeClaimCode(formData.get("claimCode"));
+  if (!code) return { error: "Kode klaim wajib diisi." };
 
   const order = await getOrderByClaimCode(code);
   if (!order) return { error: "Kode klaim tidak ditemukan. Periksa kembali penulisannya." };

@@ -10,13 +10,18 @@ import { approveOrder, rejectOrder } from "@/lib/certificateOrder";
 import { audioFileExists, createAudioUploadUrl } from "@/lib/audioStorage";
 import { saveSettings, SETTING_DEFAULTS, type SettingKey, type Settings } from "@/lib/settings";
 import type { ActionResult } from "@/lib/adminLabels";
+import { safeAudioName } from "@/lib/audioName";
 
 export type AdminLoginState = { error: string } | null;
 
 export async function adminLogin(_prevState: AdminLoginState, formData: FormData): Promise<AdminLoginState> {
-  const email = String(formData.get("email") ?? "").trim();
+  // Pentest A4: aksi ini publik dan bisa dipanggil dengan data apa pun.
+  if (!(formData instanceof FormData)) return { error: "Email dan password wajib diisi." };
+  const email = String(formData.get("email") ?? "").trim().slice(0, 254);
   const password = String(formData.get("password") ?? "");
   if (!email || !password) return { error: "Email dan password wajib diisi." };
+  // bcrypt hanya membaca 72 byte pertama; batasi supaya input raksasa tidak membebani server.
+  if (password.length > 200) return { error: "Email atau password salah." };
 
   const result = await attemptAdminLogin(email, password);
   if (!result.ok) return { error: result.error };
@@ -191,11 +196,6 @@ export async function updateSection(sectionId: string, _prev: ActionResult, form
   return { ok: true, message: "Tersimpan. Berlaku untuk peserta yang memulai bagian ini setelah sekarang." };
 }
 
-/** Nama file aman untuk storage: tanpa spasi/karakter aneh, selalu .mp3. */
-function safeAudioName(fileName: string): string {
-  const base = fileName.replace(/\.mp3$/i, "").replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
-  return `${base || "listening"}.mp3`;
-}
 
 async function getListeningSection(sectionId: string) {
   const section = await prisma.section.findUniqueOrThrow({

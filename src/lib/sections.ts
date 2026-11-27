@@ -98,7 +98,7 @@ export type PublicPassage = {
   questions: PublicQuestion[];
 };
 
-function toPublicQuestion(
+export function toPublicQuestion(
   question: {
     id: string;
     number: number;

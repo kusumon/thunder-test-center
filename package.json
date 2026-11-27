@@ -13,17 +13,18 @@
     "db:seed": "tsx prisma/seed.ts",
     "db:seed-admin": "tsx prisma/seed-admin.ts",
     "db:studio": "prisma studio",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@prisma/adapter-pg": "^7.9.1",
-    "@prisma/client": "^7.9.1",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "@react-pdf/renderer": "^4.8.1",
     "@supabase/supabase-js": "^2.114.0",
     "bcryptjs": "^3.0.3",
-    "next": "16.3.2",
+    "next": "^16.4.6",
     "pg": "^8.23.0",
-    "prisma": "^7.9.1",
+    "prisma": "^7.10.1",
     "qrcode": "^1.5.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -39,8 +40,9 @@
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "16.3.2",
+    "eslint-config-next": "^16.4.6",
     "tsx": "^4.23.12",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

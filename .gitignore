@@ -50,3 +50,6 @@ content/**/*.mp3
 
 # Aset pribadi (mis. tanda tangan sertifikat) — repo ini PUBLIK, jangan di-commit.
 /private/
+
+# Data fixture pentest (berisi token sesi uji)
+/tests/security/.fixture.json
