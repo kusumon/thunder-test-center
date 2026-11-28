@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import { prisma } from "@/lib/db";
 import { readEnv } from "@/lib/env";
+import { generateCertificateNumber, normalizeCertificateNumber } from "@/lib/certificateNumber";
 
 /**
  * Sertifikat — SRS §8 (FR-012 s.d. FR-016).
@@ -20,11 +21,6 @@ export function getCertificateSettings() {
   };
 }
 
-function formatCertificateNumber(prefix: string, issuedAt: Date, sequence: number): string {
-  const year = issuedAt.getUTCFullYear();
-  const seq = String(sequence).padStart(6, "0");
-  return `${prefix}-${year}-${seq}`;
-}
 
 /**
  * Buat sertifikat untuk attempt yang sudah selesai, atau kembalikan yang
@@ -51,25 +47,28 @@ export async function getOrCreateCertificate(attemptId: string) {
   const { prefix } = getCertificateSettings();
   const issuedAt = new Date();
 
-  // sequence Postgres tidak diketahui sebelum baris dibuat, jadi
-  // certificateNumber ditulis dua langkah dalam satu transaksi: insert
-  // dengan placeholder unik (aman dari bentrok), lalu update begitu
-  // sequence sudah ada.
-  return prisma.$transaction(async (tx) => {
-    const placeholder = `PENDING-${randomBytes(8).toString("hex")}`;
-    const created = await tx.certificate.create({
-      data: {
-        certificateNumber: placeholder,
-        attemptId,
-        issuedAt,
-        verificationToken: randomBytes(16).toString("hex"),
-      },
-    });
-    return tx.certificate.update({
-      where: { id: created.id },
-      data: { certificateNumber: formatCertificateNumber(prefix, issuedAt, created.sequence) },
-    });
-  });
+  // Nomor ACAK, bukan berurutan (lihat lib/certificateNumber.ts). Bentrok
+  // nomor hampir mustahil (1 : 1,1 triliun), tapi tetap dicoba ulang.
+  for (let attemptNo = 0; attemptNo < 5; attemptNo += 1) {
+    try {
+      return await prisma.certificate.create({
+        data: {
+          certificateNumber: generateCertificateNumber(prefix, issuedAt),
+          attemptId,
+          issuedAt,
+          verificationToken: randomBytes(16).toString("hex"),
+        },
+      });
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code !== "P2002") throw error;
+      // Dua persetujuan bersamaan untuk attempt yang sama → pakai yang sudah jadi.
+      const raced = await prisma.certificate.findUnique({ where: { attemptId } });
+      if (raced) return raced;
+      // Selain itu, nomor kebetulan bentrok → ulangi dengan nomor baru.
+    }
+  }
+  throw new Error("Gagal membuat nomor sertifikat unik. Coba lagi.");
 }
 
 /** Data lengkap untuk merender PDF — hanya dipanggil setelah ownership diverifikasi pemanggil. */
@@ -86,7 +85,8 @@ export async function getCertificateWithAttempt(certificateNumber: string) {
  */
 export async function getCertificateForVerification(certificateNumber: string) {
   const certificate = await prisma.certificate.findUnique({
-    where: { certificateNumber },
+    // Toleran huruf kecil/spasi saat nomor diketik manual.
+    where: { certificateNumber: normalizeCertificateNumber(certificateNumber) },
     select: {
       certificateNumber: true,
       status: true,
